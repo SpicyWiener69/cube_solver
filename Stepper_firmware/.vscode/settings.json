@@ -1,0 +1,8 @@
+{
+    "cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
+    //"cortex-debug.JLinkGDBServerPath": "/usr/local/bin/JLinkGDBServer",
+    "cortex-debug.stutilPath": "/usr/bin/st-util",
+    "cortex-debug.variableUseNaturalFormat": true,
+    "terminal.integrated.enablePersistentSessions": false,
+    //"terminal.integrated": "/bin/bash",
+}
