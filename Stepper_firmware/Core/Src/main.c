@@ -2,6 +2,7 @@
 #include "main.h"
 
 
+StepperMotor initMotorATask(void);
 
 int main(void)
 {
@@ -13,8 +14,6 @@ int main(void)
   //NVIC_Init();
   GPIO_Init();
  
-  int i = 1;
-  
   while (1)
   {
 
@@ -27,37 +26,50 @@ int main(void)
     // uint32_t steps = 600;               // Total steps in the profile
     // Profile_param param = {}
 
-    Profile_param param = {
-    .lowSpeedInterval = 3000,   // Start at 3000µs step interval
-    .highSpeedInterval = 400,   // Minimum interval at high speed
-    .accel = 40,                // Acceleration step decrement
-    .steps = 600                // Total steps in the profile
-    };
-    ArrayStruct profile = { .size = 0 };
-    generateTrapezoidProfile(&param, &profile);  
+    // Profile_param param = {
+    // .lowSpeedInterval = 3000,   // Start at 3000µs step interval
+    // .highSpeedInterval = 400,   // Minimum interval at high speed
+    // .accel = 40,                // Acceleration step decrement
+    // .steps = 600                // Total steps in the profile
+    // };
+    // ArrayStruct profile = { .size = 0 };
+    // generateTrapezoidProfile(&param, &profile);  
     
-    ResetUsTimer();
-    runState profileState;
-    profileState.index = 0;
-    profileState.start_time = GetUsTime();
-    profileState.pinstate = 0;
-
+    // 
+    // runState profileState;
+    // profileState.index = 0;
+    // profileState.start_time = GetUsTime();
+    
+    // profileState.pinstate = 0;
+    StepperMotor motorA = initMotorATask(); 
+    ArrayStruct profile = {.size = 0};
+    generateTrapezoidProfile(motorA,&profile);
+    motorA.accelProfilePtr = &profile;
+    
+    ResetUsTimer(); //global us timer , reset  every task
     while(1){
-      if(moveMotorTo(&profile, GPIOA,5,&profileState))
+      if(moveMotor(&motorA))
         break;
 
-
     }
-
-
-  
-    //for(int i =0;i<10000000;++i){};
-    //HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
-    // i = 0;
-    // HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
-    //HAL_Delay(1000);
-   
   }
+}
+
+StepperMotor initMotorATask(){
+  StepperMotor MotorA = {
+    .GPIO = GPIOA,
+    .dirPin = 7,
+    .stepPin = 5,
+    .steps = 4000,
+    .accel = 5,
+    .lowSpeedInterval = 1000,
+    .highSpeedInterval = 100, 
+    ._index = 0,
+    ._pinstate = 0,
+    ._start_time = 0,
+    
+     };
+  return MotorA;
 }
 
 
