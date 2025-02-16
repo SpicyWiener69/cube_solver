@@ -2,46 +2,57 @@
 #include "stm32f4xx.h"
 
 #define ARRAY_SIZE 4000
+#define MAX_TASK 10
+#define MAX_STEPPER 8
 
 typedef struct
 {
     uint16_t data[ARRAY_SIZE];
-    uint8_t direction;
+    // uint8_t direction;
     size_t size;
-} ArrayStruct;
+} ArrayStruct_T;
+
+typedef struct
+{
+    uint8_t id;
+    GPIO_TypeDef *GPIO;
+    uint8_t dirPin;
+    uint8_t stepPin;
+
+} Motor_config_T;
+
+typedef struct
+{
+    uint8_t id;
+    uint16_t steps;
+    uint8_t direction;
+    uint16_t accel;
+    ArrayStruct_T profile;
+    uint16_t lowSpeedInterval;
+    uint16_t highSpeedInterval;
+    uint32_t _index;
+    volatile uint8_t _pinstate;
+    volatile uint32_t _start_time;
+} Task_T;
+
+typedef struct
+{
+    Task_T task[MAX_TASK];
+    uint8_t length;
+} Task_lst_T;
+
+typedef struct
+{
+    Motor_config_T Motor_config[MAX_STEPPER];
+    uint8_t length;
+} Motor_lst_T;
 
 // typedef struct
 // {
+//     uint8_t id;
 //     uint16_t steps;
-//     uint16_t accel;
-//     uint16_t lowSpeedInterval;
-//     uint16_t highSpeedInterval;
-    
-// } Profile_param;
-
-
-
-// typedef struct{
-//     uint32_t index; 
-//     uint8_t pinstate;
-//     uint32_t start_time;
-// } runState;
-
-typedef struct{
-    GPIO_TypeDef* GPIO;
-    uint8_t dirPin;
-    uint8_t stepPin;
-    ArrayStruct* accelProfilePtr;
-    uint16_t steps;
-    uint16_t accel;
-    uint16_t lowSpeedInterval;
-    uint16_t highSpeedInterval;
-    uint32_t _index; 
-    uint8_t _pinstate;
-    volatile uint32_t _start_time;
-}StepperMotor;
-
-
+//     uint8_t direction;
+// } Task_T;
 
 // static void setPin(GPIO_TypeDef *GPIOx, uint32_t pin);
 // static void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin);
@@ -49,5 +60,5 @@ typedef struct{
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
 
-uint8_t moveMotor(StepperMotor* motor);
-void generateTrapezoidProfile(StepperMotor motor, ArrayStruct* profile); 
+uint8_t moveMotor(Motor_config_T motor,Task_T task);
+void generateTrapezoidProfile(Task_T task);
