@@ -35,12 +35,14 @@ class notationConvertor:
        
 
     def _solution_to_modified(self,solution): 
-        table = { 'U': ['U'], "U":['U!'],
+        table = { 'U': ['U'], "U'":['U!'],
                 'R': ['y!', 'x!', 'U', 'x', 'y'], "R'": ['y!', 'x!', 'U!', 'x', 'y'],
-                  #TODO:complete & verify table
-                  'F': ['x', 'U', 'x!'], 'D': ['u', 'y!'],
-                  'L': ['y', 'x!', 'U', 'x', 'y!'], 
-                  'B': ['x!', 'U', 'x'] }
+                'F': ['x', 'U', 'x!'], "F'": ['x', 'U!', 'x!'],
+                'D': ['u', 'y!'], "D'": ["u'", 'y!'],
+                'L': ['y', 'x!', 'U', 'x', 'y!'], "L'": ['y', 'x!', "U'", 'x', 'y!'], 
+                'B': ['x!', 'U', 'x'], 'B': ['x!', "U'", 'x']
+            }
+        
         phaseoneList = []
         for item in solution:
             phaseoneList.append(table[item][:]) #deep copies of values           
@@ -58,7 +60,7 @@ class notationConvertor:
                lst1.pop(-1)
                lst2.pop(0)
             clean.extend(lst1)
-            if i >= len(modified) -2:
+            if i >= len(modified) - 2:
                 clean.extend(lst2)
                 break
             i+=1
@@ -102,7 +104,8 @@ def notation_dataclass_to_abs_command(notation):
         return f'c {Dimension3x3.c_clamp} ; l {notation.direction * 90} r {notation.direction * 90};'
     
     def command_y():
-        pass
+        return []
+    
 
     def command_U():
         pass
