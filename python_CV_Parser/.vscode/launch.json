@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "python": "./api/venv/bin/python3.8"
+            "python": "./api/venv/bin/python3.11"
         }
     ]
 }
