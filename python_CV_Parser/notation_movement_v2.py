@@ -1,5 +1,6 @@
 from icecream import ic
-from dataclasses import dataclass
+from dataclasses import dataclass,field
+import math
 
 @dataclass
 class Dim3x3:
@@ -125,8 +126,14 @@ def remove_repetitions(modified_dataclasses):    #->list[NotationDataClass]
 class EffectorMovement:
     Effector:str
     movement:int
-    isrelative:bool = False
+    isrelative:bool = field(init = False)
     
+    def __post_init__(self):
+        if self.Effector in ['LR', 'T']:
+            self.isrelative = True
+        else:
+            self.isrelative = False
+        
 
 def dataclasses_to_effector_abs(dataclasses):
     abs_states = []
@@ -135,29 +142,31 @@ def dataclasses_to_effector_abs(dataclasses):
         'x':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME),
                             EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'LR', movement = (90 * dir * rep), isrelative=True),
+                            EffectorMovement(Effector = 'LR', movement = (90 * dir * rep)),
                             EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME)
                             ],
 
         'y':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
                             EffectorMovement(Effector = 'G', movement = Dim3x3.G_GRIP),
-                            EffectorMovement(Effector = 'T', movement = 90 * dir, isrelative=True),
+                            EffectorMovement(Effector = 'T', movement = 90 * dir),
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME),
-                            EffectorMovement(Effector = 'T', movement = (90 * dir * rep * -1), isrelative=True),
+                            EffectorMovement(Effector = 'T', movement = (90 * dir * rep * -1)),
                             EffectorMovement(Effector = 'G', movement = Dim3x3.G_HOME),
                             ],   
                                
         'U':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
                             EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'LR', movement = 90 * dir * rep, isrelative=True),
-                            EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME)
+                            EffectorMovement(Effector = 'LR', movement = 90 * dir * rep),
+                            EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME),
+                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME)
                             ],
+
         'u':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_MID),
                             EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'LR', movement = 90 * dir * rep, isrelative=True),
+                            EffectorMovement(Effector = 'LR', movement = 90 * dir * rep),
                             EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME)
                             ],
     }
@@ -169,34 +178,60 @@ def dataclasses_to_effector_abs(dataclasses):
     return abs_states
 
 #note: only linear effectors need abs->relative conversions 
-# def effector_abs_to_relative(commands): #->list[NotationDataClass]
-    
-#     @dataclass
-#     class AbsEffectorState:
-#         #default position
-#         # angles in degrees, distance in mm:
-#         D_dis:int = 30
-#         C_dis:int = 50
-#         G_angle:int = 66
-#         R_angle:int = 90
+def effector_abs_to_relative(effector_abs_commands): #->list[]
+    #all linear movements, value in mm
+    relative_commands = []
+    previous_abs_position = {
+        'D':10,   
+        'C':50,
+        'G':50
+    }
+
+    for command in effector_abs_commands:
+        if not command.isrelative:
+            relative = command.movement - previous_abs_position[command.Effector]    #newpos - previous = relative 
+            previous_abs_position[command.Effector] = command.movement               #update previous_position
+            command.movement = relative
+            command.isrelative = True
+        relative_commands.append(command)
+    return relative_commands
 
 
-
-#     abs_effector_state = AbsEffectorState()
-
-#     for command in commands:
-
-
+def gear_ratio_conversion(relative_commands):
+    motor_commands = []
+    #converted unit: deg
+    ratios = { 
+        'LR':1,
+        'T':10,
+        'C':360/(2* math.pi * 9),
+        'D':360/(2* math.pi * 10),
+        'G':360/(2* math.pi * 6),
+    }
+    for relative_command in relative_commands:
+        ratio = ratios[relative_command.Effector]
+        motor = relative_command.Effector
+        deg = ratio * relative_command.movement
+        motor_commands.append(f"{motor}:{deg}")
+    ret = "; ".join(motor_commands)
+    return ret
 
 if __name__ == "__main__":
     #notations = ['U',"U'","U'","U","R","R'","D"]
     notations = ["U'","F2","U2","R'","F"]
     dataclasses = notations_to_dataclasses(notations)
     ic(dataclasses)
+    
     modified_dataclasses = notations_to_modified_notations(dataclasses)
     ic(modified_dataclasses)
+    
     cleaned_dataclasses = remove_repetitions(modified_dataclasses)
     ic(cleaned_dataclasses,len(cleaned_dataclasses))
-    effector_abs = dataclasses_to_effector_abs(cleaned_dataclasses)
-    ic(effector_abs,len(effector_abs))
+    
+    effector_abs_commands = dataclasses_to_effector_abs(cleaned_dataclasses)
+    ic(effector_abs_commands,len(effector_abs_commands))
+    
+    relative_commands = effector_abs_to_relative(effector_abs_commands)
+    ic(relative_commands,len(relative_commands))
 
+    motor_commands = gear_ratio_conversion(relative_commands)
+    ic(motor_commands)
