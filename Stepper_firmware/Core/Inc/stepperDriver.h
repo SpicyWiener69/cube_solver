@@ -61,4 +61,4 @@ uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
 
 uint8_t moveMotor(Motor_config_T motor,Task_T task);
-void generateTrapezoidProfile(Task_T task);
+ArrayStruct_T generateTrapezoidProfile(Task_T task);
