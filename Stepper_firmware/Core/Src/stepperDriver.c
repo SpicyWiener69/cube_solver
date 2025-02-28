@@ -36,45 +36,6 @@ static inline void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin)
     GPIOx->BSRR = 1 << (16 + pin);
 }
 
-// void generateTrapezoidProfile( Profile_param* param, ArrayStruct* profile) {
-//     if (steps > ARRAY_SIZE || profile == NULL) return;
-//     uint32_t accelSteps = 0;
-//     uint32_t decelSteps = 0;
-//     uint32_t flatSteps = 0;
-
-//     // Compute the number of steps required to accelerate
-//     while ((lowSpeedInterval - accelSteps * accel) > highSpeedInterval) {
-//         accelSteps++;
-//     }
-
-//     decelSteps = accelSteps;
-//     flatSteps = (steps > 2 * accelSteps) ? (steps - 2 * accelSteps) : 0;
-
-//     profile->size = steps;
-//     uint32_t interval = lowSpeedInterval;
-//     size_t index = 0;
-
-//     // Acceleration Phase
-//     for (; index < accelSteps; index++) {
-//         interval = lowSpeedInterval - (index * accel);
-//         if (interval < highSpeedInterval) interval = highSpeedInterval;
-//         profile->data[index] = interval;
-//     }
-
-//     // Constant Speed Phase
-//     for (size_t i = 0; i < flatSteps; i++, index++) {
-//         profile->data[index] = highSpeedInterval;
-//     }
-
-//     // Deceleration Phase
-//     for (size_t i = 0; i < decelSteps; i++, index++) {
-//         interval = highSpeedInterval + (i * accel);
-//         if (interval > lowSpeedInterval) interval = lowSpeedInterval;
-//         profile->data[index] = interval;
-//     }
-// }
-
-
 
 ArrayStruct_T generateTrapezoidProfile(Task_T task) {
     if (task.steps > ARRAY_SIZE) return;
@@ -92,7 +53,7 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task) {
     flatSteps = (task.steps > 2 * accelSteps) ? (task.steps - 2 * accelSteps) : 0;
     profile.size = task.steps;
     uint32_t interval = task.lowSpeedInterval;
-    size_t index = 0;
+    uint32_t index = 0;
 
     // Acceleration Phase
     for (; index < accelSteps; index++) {
@@ -102,12 +63,12 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task) {
     }
 
     // Constant Speed Phase
-    for (size_t i = 0; i < flatSteps; i++, index++) {
+    for (uint32_t i = 0; i < flatSteps; i++, index++) {
         profile.data[index] = task.highSpeedInterval;
     }
 
     // Deceleration Phase
-    for (size_t i = 0; i < decelSteps; i++, index++) {
+    for (uint32_t i = 0; i < decelSteps; i++, index++) {
         interval = task.highSpeedInterval + (i * task.accel);
         if (interval > task.lowSpeedInterval) interval = task.lowSpeedInterval;
         profile.data[index] = interval;
@@ -122,7 +83,7 @@ uint8_t moveMotor(Motor_config_T motor,Task_T task)
     // Set the motor direction based on the current task's direction.
     if (task.direction == 1) {
         setPin(motor.GPIO, motor.dirPin);
-    } else {
+    } else if (task.direction == -1){
         resetPin(motor.GPIO, motor.dirPin);
     }
 
@@ -143,7 +104,7 @@ uint8_t moveMotor(Motor_config_T motor,Task_T task)
         }
     }
 
-    // If we've completed all steps in the acceleration profile, return 1 to indicate completion.
+    // return 1 to indicate completion.
     if (task._index > task.profile.size)
         return 1;
 

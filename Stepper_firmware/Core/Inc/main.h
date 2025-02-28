@@ -31,6 +31,10 @@ extern "C" {
 #include "board_init.h"
 #include "stm32f4xx_it.h"
 #include "stepperDriver.h"
+#include "uart.h"
+
+#include <stdio.h>
+#include <string.h>
 
 void SystemClock_Config(void);
 void EXTI_Init(void);
@@ -38,7 +42,10 @@ void NVIC_Init(void);
 void GPIO_Init(void);
 void Error_Handler(void);
 
-
+Motor_config_T initMotorLR(void);
+Motor_config_T initMotorD(void);
+Task_T parse_string_to_task(char* str);
+Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst);
 
 // #define B1_Pin GPIO_PIN_13
 // #define B1_GPIO_Port GPIOC

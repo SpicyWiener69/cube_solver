@@ -4,5 +4,9 @@
     "cortex-debug.stutilPath": "/usr/bin/st-util",
     "cortex-debug.variableUseNaturalFormat": true,
     "terminal.integrated.enablePersistentSessions": false,
+    "C_Cpp.default.intelliSenseMode": "",
+    "files.associations": {
+        "cstdint": "c"
+    },
     //"terminal.integrated": "/bin/bash",
 }
