@@ -31,6 +31,7 @@ extern "C" {
 #include "board_init.h"
 #include "stm32f4xx_it.h"
 #include "stepperDriver.h"
+#include "uart.h"
 
 #include <stdio.h>
 #include <string.h>
