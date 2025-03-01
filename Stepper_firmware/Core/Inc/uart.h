@@ -1,3 +1,13 @@
-#include "stm32f4xx.h"
+#ifndef UART_H
+#define UART_H
 
-void uart2_Config(void);
+#include "stm32f4xx.h"
+#include "gpio_def.h"
+
+
+void Uart2_Init(void);
+
+char  recieve_byte();
+void tx_byte(char txb);
+
+#endif

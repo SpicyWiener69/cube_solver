@@ -14,30 +14,42 @@ int main(void)
   // EXTI_Init();
   // NVIC_Init();
   GPIO_Init();
-
-  Motor_config_T motorLR = initMotorLR();
-  Motor_config_T motorD = initMotorD();
-
-  Motor_lst_T motorList = {0};
-  motorList.Motor_config[0] = motorLR;
-  motorList.Motor_config[1] = motorD;
-  motorList.length = 2;
-
-  while (1)
-  {
-    // runState profileState;
-    // profileState.index = 0;
-    // profileState.start_time = GetUsTime();
-    char* str = "L 90";
-    Task_T task = parse_string_to_task(str);
-    Motor_config_T motor = findMotorById(task.id,motorList);
-    ResetUsTimer();
-    while (1)
-      {
-        if (moveMotor(motor,task))
-          break;
-      }
+  Uart2_Init();
+  ResetUsTimer();  
+  while(1){
+  
+  if (GetUsTime() > 1000000){
+    tx_byte('1');
+    tx_byte('2');
+    ResetUsTimer();  
   }
+  // char rxb =  recieve_byte();
+  // tx_byte(rxb);
+  }
+
+  // Motor_config_T motorLR = initMotorLR();
+  // Motor_config_T motorD = initMotorD();
+
+  // Motor_lst_T motorList = {0};
+  // motorList.Motor_config[0] = motorLR;
+  // motorList.Motor_config[1] = motorD;
+  // motorList.length = 2;
+
+  // while (1)
+  // {
+  //   // runState profileState;
+  //   // profileState.index = 0;
+  //   // profileState.start_time = GetUsTime();
+  //   char* str = "L 90";
+  //   Task_T task = parse_string_to_task(str);
+  //   Motor_config_T motor = findMotorById(task.id,motorList);
+  //   ResetUsTimer();
+  //   while (1)
+  //     {
+  //       if (moveMotor(motor,task))
+  //         break;
+  //     }
+  // }
 }
 
 Motor_config_T initMotorLR(void){
