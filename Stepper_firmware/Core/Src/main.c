@@ -137,15 +137,16 @@ Task_T string_to_task(char* str){
 }
 
 Task_lst_T parse_string_to_tasks(CommandStr command_str){
-  uint32_t task_lst_i = 0;
+  uint32_t i = 0;
   char * pch;
   Task_lst_T task_lst = {.length = 0,.task = {{0}}};
   pch = strtok(command_str.arr,";");
   while (pch != NULL)
   {
-    string_to_task(pch);
+    Task_T task_instance = string_to_task(pch);
+    task_lst.task[i] = task_instance;
     pch = strtok (NULL, ";");
-    task_lst_i++;
+    i++;
   }
   return task_lst;
 }

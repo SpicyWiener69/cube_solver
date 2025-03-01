@@ -27,7 +27,7 @@ typedef struct
     uint16_t steps;
     uint8_t direction;
     uint16_t accel;
-    ArrayStruct_T profile;
+    ArrayStruct_T* profileP;
     uint16_t lowSpeedInterval;
     uint16_t highSpeedInterval;
     uint32_t _index;

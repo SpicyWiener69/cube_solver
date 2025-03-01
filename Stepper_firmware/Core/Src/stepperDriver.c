@@ -91,7 +91,7 @@ uint8_t moveMotor(Motor_config_T motor,Task_T task)
     volatile uint32_t now = GetUsTime();
 
     // Check if it's time to change the step state according to the acceleration profile.
-    if ((now - task._start_time) >= task.profile.data[task._index]) {
+    if ((now - task._start_time) >= task.profileP->data[task._index]) {
         task._start_time = GetUsTime();
 
         if (task._pinstate == 0) {
@@ -105,7 +105,7 @@ uint8_t moveMotor(Motor_config_T motor,Task_T task)
     }
 
     // return 1 to indicate completion.
-    if (task._index > task.profile.size)
+    if (task._index > task.profileP->size)
         return 1;
 
     return 0;
