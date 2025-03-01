@@ -4,9 +4,11 @@
 
 //StepperMotor initMotorBTask(void);
 
+// typedef enum{RECEIVE,PARSING, SOLVING,ERR}State;
+// State state = RECEIVE;
 
 int main(void)
-{
+{ 
   // HAL_Init();
 
   SystemClock_Config();
@@ -15,17 +17,27 @@ int main(void)
   // NVIC_Init();
   GPIO_Init();
   Uart2_Init();
-  ResetUsTimer();  
-  while(1){
+  ResetUsTimer(); 
+  transmit_byte('1');
+  CommandStr commands;
   
-  if (GetUsTime() > 1000000){
-    tx_byte('1');
-    tx_byte('2');
-    ResetUsTimer();  
-  }
-  // char rxb =  recieve_byte();
-  // tx_byte(rxb);
-  }
+  char str[] = "A 50; B 60; C -30;";
+  commands.length = strlen(str);
+  strcpy(commands.arr,str);
+  
+  Task_lst_T task_lst =  parse_string_to_tasks(commands);
+  // while(1){
+  //   switch(state){
+  //     case RECEIVE:
+  //       commands = recieve_bytes_until((uint16_t)MAX_RECEIVE_LENGTH, (uint8_t)'#');
+  //       transmit_byte((uint8_t)'2');
+  //       state = PARSING;
+  //       break;
+  //     case PARSING:
+      
+  //   }
+  
+  // }
 
   // Motor_config_T motorLR = initMotorLR();
   // Motor_config_T motorD = initMotorD();
@@ -111,7 +123,7 @@ Task_T init_task(void)
   return task;
 }
 
-Task_T parse_string_to_task(char* str){
+Task_T string_to_task(char* str){
   Task_T task = init_task(); 
   char motorID;
   int32_t deg;
@@ -122,6 +134,20 @@ Task_T parse_string_to_task(char* str){
   task.direction = (deg > 0)? 1: -1;
   task.steps = deg / 360 * 400;
   return task; 
+}
+
+Task_lst_T parse_string_to_tasks(CommandStr command_str){
+  uint32_t task_lst_i = 0;
+  char * pch;
+  Task_lst_T task_lst = {.length = 0,.task = {{0}}};
+  pch = strtok(command_str.arr,";");
+  while (pch != NULL)
+  {
+    string_to_task(pch);
+    pch = strtok (NULL, ";");
+    task_lst_i++;
+  }
+  return task_lst;
 }
 
 

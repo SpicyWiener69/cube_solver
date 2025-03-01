@@ -26,22 +26,46 @@ void Uart2_Init(void)
 
 
 
-char  recieve_byte(){
+uint8_t  recieve_byte(void){
     char rxb = '\0';
     while( !( USART2->SR & USART_SR_RXNE ) ) {};
-        rxb = USART2->DR;
-        return rxb;
+    rxb = USART2->DR;
+    return rxb;
 }
 
-void tx_byte(volatile char txb){
+void transmit_byte(volatile uint8_t txb){
     while( !( USART2->SR & USART_SR_TXE ) ) {};
         USART2->DR = txb;
 
 }
 
+
+
 /*blocking function*/
-// void recieve_bytes_until(){
-//         while( !( USART2->SR & USART_SR_RXNE ) ) {};
-//             rxb = USART2->DR;
+
+CommandStr recieve_bytes_until(uint16_t maxlength, uint8_t symbol){
+    uint16_t i = 0;
+    CommandStr command_str = {
+        .arr = {0},
+        .success = 0,
+    };
+    while (maxlength > 0){
+        uint8_t rxb = recieve_byte();
+        if (rxb == symbol){ 
+            command_str.success =1;
+            break;
+        }
+        command_str.arr[i] = rxb;
+        i++;
+        maxlength--;
+    }
+
+    command_str.length = i;
+    return command_str;
+}
+
+// void transmit_bytes(CommandStr string){
+//     for(int i = 0; i< CommandStr)
+
 
 // }

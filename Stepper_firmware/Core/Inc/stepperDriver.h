@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
-#define ARRAY_SIZE 4000
+#define ARRAY_SIZE 400
 #define MAX_TASK 10
 #define MAX_STEPPER 8
 

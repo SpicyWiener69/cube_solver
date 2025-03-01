@@ -4,6 +4,7 @@
 
 #include "stm32f4xx.h"
 #include "gpio_def.h"
+#include "stm32f4xx_hal.h"
 
 #define BUTTONPIN 8
 

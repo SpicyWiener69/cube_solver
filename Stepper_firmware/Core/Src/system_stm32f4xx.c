@@ -33,15 +33,10 @@
   */
 
 /** @addtogroup CMSIS
-  * @{
+  *
   */
-
-/** @addtogroup stm32f4xx_system
-  * @{
-  */  
-  
 /** @addtogroup STM32F4xx_System_Private_Includes
-  * @{
+  
   */
 
 
@@ -218,8 +213,7 @@ void SystemInit(void)
   * @retval None
   */
 void SystemCoreClockUpdate(void)
-{
-  uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
+{  uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
   
   /* Get SYSCLK source -------------------------------------------------------*/
   tmp = RCC->CFGR & RCC_CFGR_SWS;

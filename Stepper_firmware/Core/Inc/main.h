@@ -45,6 +45,7 @@ void Error_Handler(void);
 Motor_config_T initMotorLR(void);
 Motor_config_T initMotorD(void);
 Task_T parse_string_to_task(char* str);
+Task_lst_T parse_string_to_tasks(CommandStr command_str);
 Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst);
 
 // #define B1_Pin GPIO_PIN_13
