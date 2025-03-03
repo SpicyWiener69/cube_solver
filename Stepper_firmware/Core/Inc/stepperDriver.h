@@ -3,7 +3,7 @@
 
 #define ARRAY_SIZE 400
 #define MAX_TASK 10
-#define MAX_STEPPER 8
+#define MAX_STEPPER 6
 
 typedef struct
 {
@@ -33,6 +33,7 @@ typedef struct
     uint32_t _index;
     volatile uint8_t _pinstate;
     volatile uint32_t _start_time;
+    uint16_t stepsPer360;
 } Task_T;
 
 typedef struct
@@ -59,6 +60,6 @@ typedef struct
 
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
-
-uint8_t moveMotor(Motor_config_T motor,Task_T task);
 ArrayStruct_T generateTrapezoidProfile(Task_T task);
+void updateTaskProfilePtr(Task_T* task,ArrayStruct_T* profile);
+uint8_t moveMotor(Motor_config_T motor,Task_T task);

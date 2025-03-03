@@ -111,10 +111,14 @@ uint8_t moveMotor(Motor_config_T motor,Task_T task)
     return 0;
 }
 
-void parse_message(char* message, Task_lst_T task_lst){
+void updateTaskProfilePtr(Task_T* task,ArrayStruct_T* profileP){
+    task->profileP = profileP;
+}
+
+// void parse_message(char* message, Task_lst_T task_lst){
      
 
-}
+// }
 
 
 

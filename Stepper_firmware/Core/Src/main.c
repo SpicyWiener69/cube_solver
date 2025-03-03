@@ -2,10 +2,9 @@
 #include "main.h"
 
 
-//StepperMotor initMotorBTask(void);
 
-// typedef enum{RECEIVE,PARSING, SOLVING,ERR}State;
-// State state = RECEIVE;
+typedef enum{RECEIVE,PARSING, SOLVING,ERR}State;
+State state = RECEIVE;
 
 int main(void)
 { 
@@ -17,15 +16,35 @@ int main(void)
   // NVIC_Init();
   GPIO_Init();
   Uart2_Init();
-  ResetUsTimer(); 
-  transmit_byte('1');
+  // ResetUsTimer();
+  // while(1){
+  //   if (GetUsTime()>1000000){
+  //   transmit_byte('1');
+  //   ResetUsTimer();
+  //   } 
+  // }
   CommandStr commands;
   
+  Motor_config_T motorLR = initMotorLR();
+  Motor_config_T motorD = initMotorD();
+  Motor_lst_T motorList = {0};
+  motorList.Motor_config[0] = motorLR;
+  motorList.Motor_config[1] = motorD;
+  motorList.length = 2;
+
   char str[] = "A 50; B 60; C -30;";
   commands.length = strlen(str);
-  strcpy(commands.arr,str);
+  strcpy(commands.arr, str);
   
   Task_lst_T task_lst =  parse_string_to_tasks(commands);
+
+  for(int i = 0;i< task_lst.length;++i){
+    Task_T task = task_lst.task[i];
+    Motor_config_T motor = findMotorById(task.id, motorList);
+    ArrayStruct_T profile = generateTrapezoidProfile(task);
+    updateTaskProfilePtr(&task, &profile);
+    moveMotor(motor,task);
+  }
   // while(1){
   //   switch(state){
   //     case RECEIVE:
@@ -38,14 +57,6 @@ int main(void)
   //   }
   
   // }
-
-  // Motor_config_T motorLR = initMotorLR();
-  // Motor_config_T motorD = initMotorD();
-
-  // Motor_lst_T motorList = {0};
-  // motorList.Motor_config[0] = motorLR;
-  // motorList.Motor_config[1] = motorD;
-  // motorList.length = 2;
 
   // while (1)
   // {
@@ -118,7 +129,7 @@ Task_T init_task(void)
     ._index = 0,
     ._pinstate = 0,
     ._start_time = 0,
-
+    .stepsPer360 = 400,
   };
   return task;
 }
@@ -128,11 +139,11 @@ Task_T string_to_task(char* str){
   char motorID;
   int32_t deg;
   if (sscanf(str," %c %ld", &motorID, &deg) != 2){
-    
+    Error_Handler();
   }
   task.id = motorID;
   task.direction = (deg > 0)? 1: -1;
-  task.steps = deg / 360 * 400;
+  task.steps = deg / 360 * task.stepsPer360;
   return task; 
 }
 
@@ -148,6 +159,7 @@ Task_lst_T parse_string_to_tasks(CommandStr command_str){
     pch = strtok (NULL, ";");
     i++;
   }
+  task_lst.length = i;
   return task_lst;
 }
 
