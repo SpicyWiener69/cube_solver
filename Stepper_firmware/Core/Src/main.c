@@ -16,14 +16,18 @@ int main(void)
   // NVIC_Init();
   GPIO_Init();
   Uart2_Init();
-  // ResetUsTimer();
+  CommandStr commands = recieve_bytes_until(1000,'#');
+  transmit_bytes(commands);
+
+  //ResetUsTimer();
   // while(1){
   //   if (GetUsTime()>1000000){
+  //   
   //   transmit_byte('1');
   //   ResetUsTimer();
   //   } 
   // }
-  CommandStr commands;
+  
   
   Motor_config_T motorLR = initMotorLR();
   Motor_config_T motorD = initMotorD();
@@ -32,18 +36,23 @@ int main(void)
   motorList.Motor_config[1] = motorD;
   motorList.length = 2;
 
-  char str[] = "A 50; B 60; C -30;";
-  commands.length = strlen(str);
-  strcpy(commands.arr, str);
+  // char str[] = "A 50; B 60; C -30;";
+  // commands.length = strlen(str);
+  // strcpy(commands.arr, str);
   
   Task_lst_T task_lst =  parse_string_to_tasks(commands);
 
-  for(int i = 0;i< task_lst.length;++i){
+  for(int i = 0;i < task_lst.length; ++i){
+    ResetUsTimer();
     Task_T task = task_lst.task[i];
     Motor_config_T motor = findMotorById(task.id, motorList);
     ArrayStruct_T profile = generateTrapezoidProfile(task);
     updateTaskProfilePtr(&task, &profile);
-    moveMotor(motor,task);
+    while (1)
+      {
+        if (moveMotor(motor,task))
+          break;
+      }
   }
   // while(1){
   //   switch(state){

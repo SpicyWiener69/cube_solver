@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
-#define ARRAY_SIZE 400
-#define MAX_TASK 10
+#define ARRAY_SIZE 1000
+#define MAX_TASK 400
 #define MAX_STEPPER 6
 
 typedef struct

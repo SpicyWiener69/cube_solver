@@ -3,6 +3,7 @@
 
 #include "stm32f4xx.h"
 #include "gpio_def.h"
+#include <string.h>
 
 #define MAX_RECEIVE_LENGTH 200
 

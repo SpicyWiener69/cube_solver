@@ -35,6 +35,11 @@ class NotationDataClass:
     def __str__(self):
         return f"{self.name}{self.direction}{self.repetition})"
     
+def verify_notations(notations):
+    ending = ["'" , "2"]
+
+    return True
+
 def notations_to_dataclasses(notations): #->list[NotationDataClass]
     dataclasses = []
     for notation in notations:
@@ -98,18 +103,22 @@ def notations_to_modified_notations(dataclasses):
 def remove_repetitions(modified_dataclasses):    #->list[NotationDataClass]
     cleaned_dataclasses = []
     i = 0
-    while i< len(modified_dataclasses) - 1:
-        data1 = modified_dataclasses[i]
-        data2 = modified_dataclasses[i+1]
-        if (data1.name == data2.name) and (data1.direction == data2.direction*-1):
-            i+=2
-        else:
-            cleaned_dataclasses.append(data1)
-            i+=1
- 
+    if len(modified_dataclasses) <= 1:
+        cleaned_dataclasses.extend(modified_dataclasses)
+    else:
+        while i< len(modified_dataclasses) - 1:
+            data1 = modified_dataclasses[i]
+            data2 = modified_dataclasses[i+1]
+            if (data1.name == data2.name) and (data1.direction == data2.direction*-1):
+                i+=2
+            else:
+                cleaned_dataclasses.append(data1)
+                i+=1
+            if i == len(modified_dataclasses) -1:
+                cleaned_dataclasses.append(modified_dataclasses[i])
+                break
 
-        if i == len(modified_dataclasses) -1:
-            cleaned_dataclasses.append(modified_dataclasses[i])
+        
 
     return cleaned_dataclasses
     # for i in range(len(modified_dataclasses)-1):
@@ -149,18 +158,20 @@ def dataclasses_to_effector_abs(dataclasses):
         'y':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
                             EffectorMovement(Effector = 'G', movement = Dim3x3.G_GRIP),
-                            EffectorMovement(Effector = 'T', movement = 90 * dir),
+                            EffectorMovement(Effector = 'T', movement = (90 * dir* rep)),
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME),
-                            EffectorMovement(Effector = 'T', movement = (90 * dir * rep * -1)),
+                            EffectorMovement(Effector = 'T', movement = (90 * dir * rep * -1)), #return to original value.
                             EffectorMovement(Effector = 'G', movement = Dim3x3.G_HOME),
                             ],   
                                
         'U':lambda dir,rep: [
                             EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
                             EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'LR', movement = 90 * dir * rep),
-                            EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME),
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME)
+                            EffectorMovement(Effector = 'G', movement= Dim3x3.G_GRIP),
+                            EffectorMovement(Effector = 'T', movement= (90* dir * rep)),
+                            EffectorMovement(Effector = 'G', movement= Dim3x3.G_HOME),
+                            EffectorMovement(Effector = 'D', movement =Dim3x3.D_HOME),
+                            EffectorMovement(Effector = 'T', movement =(90 * dir * rep * -1)),  
                             ],
 
         'u':lambda dir,rep: [
@@ -202,10 +213,10 @@ def gear_ratio_conversion(relative_commands):
     #converted unit: deg
     ratios = { 
         'LR':1,
-        'T':10,
-        'C':360/(2* math.pi * 9),
-        'D':360/(2* math.pi * 10),
-        'G':360/(2* math.pi * 6),
+        'T':9.875,
+        'C':360/(40),
+        'D':360/(63),
+        'G':360/(46.3),
     }
     for relative_command in relative_commands:
         ratio = ratios[relative_command.Effector]
@@ -215,9 +226,28 @@ def gear_ratio_conversion(relative_commands):
     ret = "; ".join(motor_commands)
     return ret
 
+def convert_all(notations):
+    dataclasses = notations_to_dataclasses(notations)
+    
+    modified_dataclasses = notations_to_modified_notations(dataclasses)
+    
+    cleaned_dataclasses = remove_repetitions(modified_dataclasses)
+    
+    effector_abs_commands = dataclasses_to_effector_abs(cleaned_dataclasses)
+    
+    relative_commands = effector_abs_to_relative(effector_abs_commands)
+    
+    motor_commands = gear_ratio_conversion(relative_commands)
+
+    return motor_commands
+
+
 if __name__ == "__main__":
-    #notations = ['U',"U'","U'","U","R","R'","D"]
-    notations = ["U'","F2","U2","R'","F"]
+    notations = ['U',"U'"]
+    notations = ['F',"F'",'U']
+    notations = ['F']
+    
+    #notations = ["U'","F2","U2","R'","F"]
     dataclasses = notations_to_dataclasses(notations)
     ic(dataclasses)
     

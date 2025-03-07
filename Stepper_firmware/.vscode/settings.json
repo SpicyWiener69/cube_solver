@@ -8,5 +8,6 @@
     "files.associations": {
         "cstdint": "c"
     },
+    "cmake.sourceDirectory": "/home/aaron/Desktop/cube_solver/Stepper_firmware/Drivers/CMSIS/DSP/Source/FilteringFunctions",
     //"terminal.integrated": "/bin/bash",
 }
