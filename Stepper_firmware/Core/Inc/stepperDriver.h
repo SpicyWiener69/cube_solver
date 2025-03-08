@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
+#include "gpio_def.h"
 
-#define ARRAY_SIZE 1000
+#define ARRAY_SIZE 2000
 #define MAX_TASK 400
 #define MAX_STEPPER 6
 
@@ -23,9 +24,9 @@ typedef struct
 
 typedef struct
 {
-    uint8_t id;
+    uint16_t id;
     uint16_t steps;
-    uint8_t direction;
+    int16_t direction;
     uint16_t accel;
     ArrayStruct_T* profileP;
     uint16_t lowSpeedInterval;
@@ -39,7 +40,7 @@ typedef struct
 typedef struct
 {
     Task_T task[MAX_TASK];
-    uint8_t length;
+    uint16_t length;
 } Task_lst_T;
 
 typedef struct
@@ -60,6 +61,7 @@ typedef struct
 
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
+void initStepperGPIO(Motor_lst_T motor_lst);
 ArrayStruct_T generateTrapezoidProfile(Task_T task);
 void updateTaskProfilePtr(Task_T* task,ArrayStruct_T* profile);
-uint8_t moveMotor(Motor_config_T motor,Task_T task);
+uint8_t moveMotor(Motor_config_T motor,Task_T* taskPtr);

@@ -25,3 +25,4 @@ elif mode == 'Manual':
             break
         port.write(raw_command.encode('ascii'))
         print(port.read_until(expected=b'#'))
+        

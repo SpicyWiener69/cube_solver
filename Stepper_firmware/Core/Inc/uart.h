@@ -17,6 +17,6 @@ void Uart2_Init(void);
 uint8_t recieve_byte(void);
 void transmit_byte(uint8_t txb);
 CommandStr recieve_bytes_until(uint16_t maxlength, uint8_t symbol);
-void transmit_bytes(CommandStr);
+void transmit_command(CommandStr);
 
 #endif

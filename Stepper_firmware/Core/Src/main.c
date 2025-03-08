@@ -1,59 +1,82 @@
 
 #include "main.h"
 
-
-
-typedef enum{RECEIVE,PARSING, SOLVING,ERR}State;
+typedef enum
+{
+  RECEIVE,
+  PARSING,
+  SOLVING,
+  ERR
+} State;
 State state = RECEIVE;
 
 int main(void)
-{ 
-  // HAL_Init();
-
+{
   SystemClock_Config();
   MhzTimer_Init();
   // EXTI_Init();
   // NVIC_Init();
-  GPIO_Init();
+  // GPIO_Init();
   Uart2_Init();
-  CommandStr commands = recieve_bytes_until(1000,'#');
-  transmit_bytes(commands);
 
-  //ResetUsTimer();
-  // while(1){
-  //   if (GetUsTime()>1000000){
-  //   
-  //   transmit_byte('1');
-  //   ResetUsTimer();
-  //   } 
-  // }
-  
-  
   Motor_config_T motorLR = initMotorLR();
   Motor_config_T motorD = initMotorD();
+  Motor_config_T motorT = initMotorT();
+  Motor_config_T motorC = initMotorC();
+
   Motor_lst_T motorList = {0};
   motorList.Motor_config[0] = motorLR;
   motorList.Motor_config[1] = motorD;
-  motorList.length = 2;
+  motorList.Motor_config[2] = motorT;
+  motorList.Motor_config[3] = motorC;
+  motorList.length = 4;
+  initStepperGPIO(motorList);
+  initServo();
+  while (1)
+  {
+    CommandStr commands = recieve_bytes_until(1000, '#');
+    transmit_command(commands);
 
-  // char str[] = "A 50; B 60; C -30;";
-  // commands.length = strlen(str);
-  // strcpy(commands.arr, str);
-  
-  Task_lst_T task_lst =  parse_string_to_tasks(commands);
+    // ResetUsTimer();
+    // while(1){
+    //   if (GetUsTime()>1000000){
 
-  for(int i = 0;i < task_lst.length; ++i){
-    ResetUsTimer();
-    Task_T task = task_lst.task[i];
-    Motor_config_T motor = findMotorById(task.id, motorList);
-    ArrayStruct_T profile = generateTrapezoidProfile(task);
-    updateTaskProfilePtr(&task, &profile);
-    while (1)
+    //   transmit_byte('q');
+    //   transmit_byte('#');
+
+    //   ResetUsTimer();
+    //   }
+    // }
+
+    // char str[] = "A 50; B 60; C -30;";
+    // commands.length = strlen(str);
+    // strcpy(commands.arr, str);
+
+    Task_lst_T task_lst = parse_string_to_tasks(commands);
+
+    for (int i = 0; i < task_lst.length; ++i)
+    {
+      ResetUsTimer();
+      Task_T task = task_lst.task[i];
+      if (task.id == 'S')
       {
-        if (moveMotor(motor,task))
-          break;
+        moveServoMotor();
       }
+      else
+      {
+        Motor_config_T motor = findMotorById(task.id, motorList);
+        ArrayStruct_T profile = generateTrapezoidProfile(task);
+        updateTaskProfilePtr(&task, &profile);
+        while (1)
+        {
+          if (moveMotor(motor, &task))
+            break;
+        }
+      }
+    }
+    transmit_byte('+');
   }
+
   // while(1){
   //   switch(state){
   //     case RECEIVE:
@@ -62,9 +85,9 @@ int main(void)
   //       state = PARSING;
   //       break;
   //     case PARSING:
-      
+
   //   }
-  
+
   // }
 
   // while (1)
@@ -84,94 +107,102 @@ int main(void)
   // }
 }
 
-Motor_config_T initMotorLR(void){
+Motor_config_T initMotorLR(void)
+{
   Motor_config_T MotorLR = {
       .id = 'L',
       .GPIO = GPIOA,
-      .dirPin = 7,
-      .stepPin = 5
-      // .lowSpeedInterval = 1000,
-      // .highSpeedInterval = 100,
-      // .accel = 5,
-      // .steps = 4000,
-     // ._index = 0,
-     // ._pinstate = 0,
-    // ._start_time = 0,
-
-  };
+      .dirPin = 6,
+      .stepPin = 7};
   return MotorLR;
 }
 
-Motor_config_T initMotorD(void){
-  Motor_config_T MotorLR = {
+Motor_config_T initMotorD(void)
+{
+  Motor_config_T MotorD = {
       .id = 'D',
-      .GPIO = GPIOA,
-      .dirPin = 9,
-      .stepPin = 4
-      // .lowSpeedInterval = 1000,
-      // .highSpeedInterval = 100,
-      // .accel = 5,
-      // .steps = 4000,
-     // ._index = 0,
-     // ._pinstate = 0,
-    // ._start_time = 0,
-
-  };
-  return MotorLR;
+      .GPIO = GPIOB,
+      .dirPin = 4,
+      .stepPin = 5};
+  return MotorD;
 }
 
-Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst){
-  for (int i = 0; i < lst.length; ++i){
-    if (id == lst.Motor_config[i].id){
-        return lst.Motor_config[i];
+Motor_config_T initMotorC(void)
+{
+  Motor_config_T MotorC = {
+      .id = 'C',
+      .GPIO = GPIOB,
+      .dirPin = 8,
+      .stepPin = 9};
+  return MotorC;
+}
+
+Motor_config_T initMotorT(void)
+{
+  Motor_config_T MotorT = {
+      .id = 'T',
+      .GPIO = GPIOB,
+      .dirPin = 14,
+      .stepPin = 15};
+  return MotorT;
+}
+
+Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst)
+{
+  for (int i = 0; i < lst.length; ++i)
+  {
+    if (id == lst.Motor_config[i].id)
+    {
+      return lst.Motor_config[i];
     }
   }
-  
 }
 
 Task_T init_task(void)
 {
   Task_T task = {
-    .lowSpeedInterval = 1000,
-    .highSpeedInterval = 100,
-    .accel = 5,
-    ._index = 0,
-    ._pinstate = 0,
-    ._start_time = 0,
-    .stepsPer360 = 400,
+      .lowSpeedInterval = 1000,
+      .highSpeedInterval = 500,
+      .accel = 5,
+      ._index = 0,
+      ._pinstate = 0,
+      ._start_time = 0,
+      .stepsPer360 = 400,
   };
   return task;
 }
 
-Task_T string_to_task(char* str){
-  Task_T task = init_task(); 
+Task_T string_to_task(char *str)
+{
+  Task_T task = init_task();
   char motorID;
   int32_t deg;
-  if (sscanf(str," %c %ld", &motorID, &deg) != 2){
+  if (sscanf(str, " %c:%ld", &motorID, &deg) != 2)
+  {
     Error_Handler();
   }
   task.id = motorID;
-  task.direction = (deg > 0)? 1: -1;
-  task.steps = deg / 360 * task.stepsPer360;
-  return task; 
+  task.direction = (deg > 0) ? 1 : -1;
+  task.steps = abs(deg) / ((float)360) * task.stepsPer360;
+  return task;
 }
 
-Task_lst_T parse_string_to_tasks(CommandStr command_str){
+Task_lst_T parse_string_to_tasks(CommandStr command_str)
+{
   uint32_t i = 0;
-  char * pch;
-  Task_lst_T task_lst = {.length = 0,.task = {{0}}};
-  pch = strtok(command_str.arr,";");
+  char *pch;
+  Task_lst_T task_lst = {.length = 0, .task = {{0}}};
+  pch = strtok(command_str.arr, ";");
   while (pch != NULL)
   {
     Task_T task_instance = string_to_task(pch);
     task_lst.task[i] = task_instance;
-    pch = strtok (NULL, ";");
+    pch = strtok(NULL, ";");
     i++;
   }
   task_lst.length = i;
   return task_lst;
 }
-
 
 void Error_Handler(void)
 {

@@ -23,13 +23,24 @@ void Uart2_Init(void)
     USART2->CR1 |= (USART_CR1_RE | USART_CR1_TE | USART_CR1_UE);
 }
 
-void transmit_bytes(CommandStr command_str)
+void transmit_command(CommandStr command_str)
 {
     for (uint32_t i = 0; i < command_str.length; ++i)
     {
         transmit_byte(command_str.arr[i]);
     }
+    transmit_byte('#');
 }
+
+// void transmit_bytes(char* str, uint32_t len)
+// {
+//     for (uint32_t i = 0; i < len; ++i)
+//     {
+//         transmit_byte(command_str.arr[i]);
+//     }
+//     transmit_byte('#');
+// }
+
 
 void transmit_byte(uint8_t txb)
 {

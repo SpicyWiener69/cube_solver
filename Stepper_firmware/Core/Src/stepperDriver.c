@@ -35,6 +35,26 @@ static inline void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin)
     GPIOx->BSRR = 1 << (16 + pin);
 }
 
+void initStepperGPIO(Motor_lst_T motor_lst)
+{
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+
+
+    for (int i = 0; i < motor_lst.length; ++i)
+    {
+        Motor_config_T motor = motor_lst.Motor_config[i];
+        /*note: default GPIO MODER values may not be b'00 */
+        motor.GPIO->MODER &= ~(0x3 << (motor.stepPin * 2));              // Clear the two bits for the pin
+        motor.GPIO->MODER |=  (GPIO_MODER_OUTPUT << (motor.stepPin * 2));    // Set them to macro value
+        motor.GPIO->MODER &= ~(0x3 << (motor.dirPin * 2));  
+        motor.GPIO->MODER |= (GPIO_MODER_OUTPUT << motor.dirPin*2);
+        
+    }
+}
+
 ArrayStruct_T generateTrapezoidProfile(Task_T task)
 {
     if (task.steps > ARRAY_SIZE)
@@ -83,14 +103,14 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task)
     return profile;
 }
 
-uint8_t moveMotor(Motor_config_T motor, Task_T task)
+uint8_t moveMotor(Motor_config_T motor, Task_T* taskPtr)
 {
     // Set the motor direction based on the current task's direction.
-    if (task.direction == 1)
+    if (taskPtr->direction == 1)
     {
         setPin(motor.GPIO, motor.dirPin);
     }
-    else if (task.direction == -1)
+    else if (taskPtr->direction == -1)
     {
         resetPin(motor.GPIO, motor.dirPin);
     }
@@ -99,25 +119,25 @@ uint8_t moveMotor(Motor_config_T motor, Task_T task)
     volatile uint32_t now = GetUsTime();
 
     // Check if it's time to change the step state according to the acceleration profile.
-    if ((now - task._start_time) >= task.profileP->data[task._index])
+    if ((now - taskPtr->_start_time) >= taskPtr->profileP->data[taskPtr->_index])
     {
-        task._start_time = GetUsTime();
+        taskPtr->_start_time = GetUsTime();
 
-        if (task._pinstate == 0)
+        if (taskPtr->_pinstate == 0)
         {
             setPin(motor.GPIO, motor.stepPin);
-            task._pinstate = 1;
+            taskPtr->_pinstate = 1;
         }
         else
         {
             resetPin(motor.GPIO, motor.stepPin);
-            task._pinstate = 0;
-            task._index++; // Advance to the next step in the profile.
+            taskPtr->_pinstate = 0;
+            taskPtr->_index++; // Advance to the next step in the profile.
         }
     }
 
     // return 1 to indicate completion.
-    if (task._index > task.profileP->size)
+    if (taskPtr->_index > taskPtr->profileP->size)
         return 1;
 
     return 0;
