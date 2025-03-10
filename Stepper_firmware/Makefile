@@ -44,7 +44,7 @@ Core/Src/system_stm32f4xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 Core/Src/uart.c \
-
+Core/Src/servo.c \
 #Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
