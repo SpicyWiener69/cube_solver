@@ -32,6 +32,7 @@ extern "C" {
 #include "stm32f4xx_it.h"
 #include "stepperDriver.h"
 #include "uart.h"
+#include "servo.h"
 
 #include<stdlib.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@ void Error_Handler(void);
 Motor_config_T initMotorLR(void);
 Motor_config_T initMotorD(void);
 Motor_config_T initMotorT(void);
+Motor_config_T initMotorC(void);
 
 Task_T parse_string_to_task(char* str);
 Task_lst_T parse_string_to_tasks(CommandStr command_str);
@@ -72,4 +74,4 @@ Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst);
 }
 #endif
 
-#endif /* __MAIN_H */
+#endif /* __MAIN_H  */

@@ -11,6 +11,8 @@ uint32_t GetUsTime(void)
     return TIM2->CNT;
 }
 
+
+
 void togglePin(GPIO_TypeDef *GPIOx, uint32_t pin)
 {
     /*read data from reg*/
@@ -33,6 +35,17 @@ static inline void setPin(GPIO_TypeDef *GPIOx, uint32_t pin)
 static inline void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin)
 {
     GPIOx->BSRR = 1 << (16 + pin);
+}
+
+Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin)
+{
+    Motor_config_T motor = {
+        .id = id,
+        .GPIO = GPIO,
+        .dirPin = dirPin,
+        .stepPin = stepPin
+    };
+    return motor;
 }
 
 void initStepperGPIO(Motor_lst_T motor_lst)

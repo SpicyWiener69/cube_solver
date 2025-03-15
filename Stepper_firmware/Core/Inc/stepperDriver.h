@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
     uint16_t id;
+    int16_t deg;
     uint16_t steps;
     int16_t direction;
     uint16_t accel;
@@ -61,6 +62,7 @@ typedef struct
 
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
+Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin);
 void initStepperGPIO(Motor_lst_T motor_lst);
 ArrayStruct_T generateTrapezoidProfile(Task_T task);
 void updateTaskProfilePtr(Task_T* task,ArrayStruct_T* profile);

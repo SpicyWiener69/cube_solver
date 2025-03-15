@@ -1,8 +1,14 @@
 
 #include "servo.h"
 
-/* timer3, channel 3 , C8 pin*/
-void servo_Init(void)  
+
+/* 0<->180  => 1000<->2000  */
+static uint32_t servo_mapping(float deg) {
+  uint32_t ccr = (deg/180) *  1000 + 1000;
+  return ccr;
+}
+
+servo_config_T servo_Init(void)  
 {        
   // /*enable TIM3 on APB1 */
   // RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
@@ -17,33 +23,39 @@ void servo_Init(void)
   // /*update*/
   // TIM3->EGR = TIM_EGR_UG;
 
-  // /*initalize port*/
+  servo_config_T config;
+  /* timer 3, channel 3 , C8 pin*/
 
-// Enable clocks for GPIO and TIMER4
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
-    RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
+  /*Enable clocks for GPIOC and TIMER3 */
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+  RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
-    // Set alternate function on PD15
-    GPIOD->MODER |= GPIO_MODER_MODER15_1;
-    GPIOD->AFR[1] |= GPIO_AFRH_AFSEL15_1;
+  // Set alternate function on PC8
+  GPIOC->MODER |= GPIO_MODER_ALTERNATE << GPIO_MODER_MODER8_Pos;
+  GPIOC->AFR[1] |= 0b0010 << 0;
 
-    // Set CC4 channel to output mode (default after reset)
-    TIM4->CCMR2 &= ~TIM_CCMR2_CC4S;
-    TIM3->CCMR2 &= ~TIM_CCMR2_CC4S;
-  
-    // Select the polarity by writing the CCxP bit in CCER register.
-    TIM4->CCER &= ~TIM_CCER_CC4P;
+  // Set CC3 channel to output mode (default after reset)
+  TIM3->CCMR2 &= ~TIM_CCMR2_CC3S;
 
-    // Select the PWM mode (PWM1 or PWM2) by writing OCxM bits in CCMRx register.
-    TIM4->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1;
+  // Select the polarity by writing the CCxP bit in CCER register.
+  TIM3->CCER &= ~TIM_CCER_CC3P;
 
-    // Program the period and the duty cycle respectively in ARR and CCRx registers.
-    TIM4->PSC = 15999; // PSC divides the 16MHz clock so it is running the counter at 1kHz
-    TIM4->ARR = PERIOD;
-    TIM4->CCR4 = DUTY;
+  // Select the PWM mode (PWM1 or PWM2) by writing OCxM bits in CCMRx register.
+  TIM3->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1;
 
-    // Set the preload bit in CCMRx register and enable auto-reload preload
-    TIM4->CCMR2 |= TIM_CCMR2_OC4PE;
-    TIM4->CR1 |= TIM_CR1_ARPE;
+  // Program the period and the duty cycle respectively in ARR and CCRx registers.
+  /* 84M -> 1MHz */
+  TIM3->PSC = 84 - 1; 
+    /* 1Mhz / 20000 = 50hz */
+  //uint16_t TIM_arr = 20000; 
+  TIM3->ARR  = 20000;
+  //ccr = servo_mapping(config.home_deg)
+  TIM3->CCR3 = 10000;
 
+
+  // Set the preload bit in CCMRx register and enable auto-reload preload
+  TIM3->CCMR2 |= TIM_CCMR2_OC3PE;
+  TIM3->CR1 |= TIM_CR1_ARPE;
+
+  return config;
 } 

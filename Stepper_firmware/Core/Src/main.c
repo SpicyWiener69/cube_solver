@@ -18,11 +18,17 @@ int main(void)
   // NVIC_Init();
   // GPIO_Init();
   Uart2_Init();
+  servo_config_T  servo = servo_Init();
 
-  Motor_config_T motorLR = initMotorLR();
-  Motor_config_T motorD = initMotorD();
-  Motor_config_T motorT = initMotorT();
-  Motor_config_T motorC = initMotorC();
+  // Motor_config_T motorLR = initMotorLR();
+  // Motor_config_T motorD = initMotorD();
+  // Motor_config_T motorT = initMotorT();
+  // Motor_config_T motorC = initMotorC();
+
+  Motor_config_T motorLR = initMotor('L', GPIOA, 6, 7);
+  Motor_config_T motorD  = initMotor('D', GPIOB, 4, 5);
+  Motor_config_T motorT  = initMotor('T', GPIOB, 14, 15);
+  Motor_config_T motorC  = initMotor('C', GPIOB, 8, 9);
 
   Motor_lst_T motorList = {0};
   motorList.Motor_config[0] = motorLR;
@@ -31,7 +37,6 @@ int main(void)
   motorList.Motor_config[3] = motorC;
   motorList.length = 4;
   initStepperGPIO(motorList);
-  initServo();
   while (1)
   {
     CommandStr commands = recieve_bytes_until(1000, '#');
@@ -60,7 +65,7 @@ int main(void)
       Task_T task = task_lst.task[i];
       if (task.id == 'S')
       {
-        moveServoMotor();
+        //moveServoMotor();
       }
       else
       {
@@ -90,62 +95,49 @@ int main(void)
 
   // }
 
-  // while (1)
-  // {
-  //   // runState profileState;
-  //   // profileState.index = 0;
-  //   // profileState.start_time = GetUsTime();
-  //   char* str = "L 90";
-  //   Task_T task = parse_string_to_task(str);
-  //   Motor_config_T motor = findMotorById(task.id,motorList);
-  //   ResetUsTimer();
-  //   while (1)
-  //     {
-  //       if (moveMotor(motor,task))
-  //         break;
-  //     }
-  // }
 }
 
-Motor_config_T initMotorLR(void)
-{
-  Motor_config_T MotorLR = {
-      .id = 'L',
-      .GPIO = GPIOA,
-      .dirPin = 6,
-      .stepPin = 7};
-  return MotorLR;
-}
+// Motor_config_T initMotorLR(void)
+// {
+//   Motor_config_T MotorLR = {
+//       .id = 'L',
+//       .GPIO = GPIOA,
+//       .dirPin = 6,
+//       .stepPin = 7};
+//   return MotorLR;
+// }
 
-Motor_config_T initMotorD(void)
-{
-  Motor_config_T MotorD = {
-      .id = 'D',
-      .GPIO = GPIOB,
-      .dirPin = 4,
-      .stepPin = 5};
-  return MotorD;
-}
+// Motor_config_T initMotorD(void)
+// {
+//   Motor_config_T MotorD = {
+//       .id = 'D',
+//       .GPIO = GPIOB,
+//       .dirPin = 4,
+//       .stepPin = 5};
+//   return MotorD;
+// }
 
-Motor_config_T initMotorC(void)
-{
-  Motor_config_T MotorC = {
-      .id = 'C',
-      .GPIO = GPIOB,
-      .dirPin = 8,
-      .stepPin = 9};
-  return MotorC;
-}
+// Motor_config_T initMotorC(void)
+// {
+//   Motor_config_T MotorC = {
+//       .id = 'C',
+//       .GPIO = GPIOB,
+//       .dirPin = 8,
+//       .stepPin = 9};
+//   return MotorC;
+// }
 
-Motor_config_T initMotorT(void)
-{
-  Motor_config_T MotorT = {
-      .id = 'T',
-      .GPIO = GPIOB,
-      .dirPin = 14,
-      .stepPin = 15};
-  return MotorT;
-}
+// Motor_config_T initMotorT(void)
+// {
+//   Motor_config_T MotorT = {
+//       .id = 'T',
+//       .GPIO = GPIOB,
+//       .dirPin = 14,
+//       .stepPin = 15};
+//   return MotorT;
+// }
+
+
 
 Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst)
 {
@@ -181,9 +173,12 @@ Task_T string_to_task(char *str)
   {
     Error_Handler();
   }
+  /*servo motor , no deg to steps conversion */
+  task.deg = deg;
   task.id = motorID;
   task.direction = (deg > 0) ? 1 : -1;
   task.steps = abs(deg) / ((float)360) * task.stepsPer360;
+  
   return task;
 }
 
