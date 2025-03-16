@@ -6,7 +6,7 @@
 
 typedef struct
 {   uint8_t id;
-    uint16_t pwm_pin;
+    //uint16_t pwm_pin;
     GPIO_TypeDef *gpio;
     int16_t deg;
     int16_t home_deg;
@@ -17,8 +17,8 @@ servo_config_T servo_Init(void);
 
 //void set_servo_home() {}
 
-//moveServoMotorRelative(int16_t deg) {}
+//moveServoMotorRelative(int16_t deg);
 
-//moveServoMotorAbs(int16_t deg) {}
+servo_config_T moveServoMotorAbs(servo_config_T servo, int16_t deg);
 
 #endif

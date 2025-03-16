@@ -11,8 +11,6 @@ uint32_t GetUsTime(void)
     return TIM2->CNT;
 }
 
-
-
 void togglePin(GPIO_TypeDef *GPIOx, uint32_t pin)
 {
     /*read data from reg*/
@@ -43,8 +41,7 @@ Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16
         .id = id,
         .GPIO = GPIO,
         .dirPin = dirPin,
-        .stepPin = stepPin
-    };
+        .stepPin = stepPin};
     return motor;
 }
 
@@ -55,24 +52,25 @@ void initStepperGPIO(Motor_lst_T motor_lst)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
 
-
     for (int i = 0; i < motor_lst.length; ++i)
     {
         Motor_config_T motor = motor_lst.Motor_config[i];
         /*note: default GPIO MODER values may not be b'00 */
         motor.GPIO->MODER &= ~(0x3 << (motor.stepPin * 2));              // Clear the two bits for the pin
-        motor.GPIO->MODER |=  (GPIO_MODER_OUTPUT << (motor.stepPin * 2));    // Set them to macro value
-        motor.GPIO->MODER &= ~(0x3 << (motor.dirPin * 2));  
-        motor.GPIO->MODER |= (GPIO_MODER_OUTPUT << motor.dirPin*2);
-        
+        motor.GPIO->MODER |= (GPIO_MODER_OUTPUT << (motor.stepPin * 2)); // Set them to macro value
+        motor.GPIO->MODER &= ~(0x3 << (motor.dirPin * 2));
+        motor.GPIO->MODER |= (GPIO_MODER_OUTPUT << motor.dirPin * 2);
     }
 }
 
 ArrayStruct_T generateTrapezoidProfile(Task_T task)
 {
-    if (task.steps > ARRAY_SIZE)
-        return;
     ArrayStruct_T profile;
+    if (task.steps > ARRAY_SIZE){
+        profile.success = 0; 
+        return profile;
+        }
+
     uint32_t accelSteps = 0;
     uint32_t decelSteps = 0;
     uint32_t flatSteps = 0;
@@ -112,11 +110,11 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task)
             interval = task.lowSpeedInterval;
         profile.data[index] = interval;
     }
-    /// task. = &profile; //
+    profile.success = 1;
     return profile;
 }
 
-uint8_t moveMotor(Motor_config_T motor, Task_T* taskPtr)
+uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
 {
     // Set the motor direction based on the current task's direction.
     if (taskPtr->direction == 1)

@@ -2,10 +2,25 @@
 #include "servo.h"
 
 
-/* 0<->180  => 1000<->2000  */
-static uint32_t servo_mapping(float deg) {
-  uint32_t ccr = (deg/180) *  1000 + 1000;
+/* Maps 0<->180(deg)  => lower_bound <->higher_bound(ccr value). Tuned for MG995 servo */
+static uint16_t servo_mapping(int16_t deg) {
+  int16_t lower_bound = 450;
+  int16_t higher_bound = 2500;
+  
+  uint16_t ccr =  ((float)deg / 180.0f) * (higher_bound - lower_bound) + lower_bound;
+  // if (ccr > 2000)
+  //   return 2000;
+  // if (ccr < 1000)
+  //   return 1000;  
   return ccr;
+}
+
+servo_config_T moveServoMotorAbs(servo_config_T servo, int16_t deg){
+  servo.deg = deg;
+  uint16_t ccr = servo_mapping(deg);
+  TIM3->CCR3 = ccr;
+  TIM3->EGR = TIM_EGR_UG;
+  return servo;
 }
 
 servo_config_T servo_Init(void)  
@@ -23,7 +38,10 @@ servo_config_T servo_Init(void)
   // /*update*/
   // TIM3->EGR = TIM_EGR_UG;
 
-  servo_config_T config;
+  servo_config_T servo;
+  servo.home_deg = 90;
+  servo.gpio = GPIOC;
+
   /* timer 3, channel 3 , C8 pin*/
 
   /*Enable clocks for GPIOC and TIMER3 */
@@ -34,28 +52,36 @@ servo_config_T servo_Init(void)
   GPIOC->MODER |= GPIO_MODER_ALTERNATE << GPIO_MODER_MODER8_Pos;
   GPIOC->AFR[1] |= 0b0010 << 0;
 
+  // Program the period and the duty cycle respectively in ARR and CCRx registers.
+  /* 84M -> 1MHz */
+  TIM3->PSC = 84 - 1; 
+  
+  /* 1Mhz / 20000 = 50hz */
+  uint16_t TIM_arr = 20000; 
+  TIM3->ARR  = TIM_arr;
+
+  uint16_t ccr = servo_mapping(servo.home_deg);
+  TIM3->CCR3 = ccr;
+
+  // Select the PWM mode (PWM1 or PWM2) by writing OCxM bits in CCMRx register.
+  TIM3->CCMR2 |= TIM_CCMR2_OC3M_2 | TIM_CCMR2_OC3M_1;
+
+  // Set the preload bit in CCMRx register and enable auto-reload preload
+  TIM3->CCMR2 |= TIM_CCMR2_OC3PE;
+
+  TIM3->CR1 |= TIM_CR1_ARPE;
+
   // Set CC3 channel to output mode (default after reset)
   TIM3->CCMR2 &= ~TIM_CCMR2_CC3S;
 
   // Select the polarity by writing the CCxP bit in CCER register.
   TIM3->CCER &= ~TIM_CCER_CC3P;
 
-  // Select the PWM mode (PWM1 or PWM2) by writing OCxM bits in CCMRx register.
-  TIM3->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1;
+  TIM3->CCER |= TIM_CCER_CC3E;
 
-  // Program the period and the duty cycle respectively in ARR and CCRx registers.
-  /* 84M -> 1MHz */
-  TIM3->PSC = 84 - 1; 
-    /* 1Mhz / 20000 = 50hz */
-  //uint16_t TIM_arr = 20000; 
-  TIM3->ARR  = 20000;
-  //ccr = servo_mapping(config.home_deg)
-  TIM3->CCR3 = 10000;
+  TIM3->EGR = TIM_EGR_UG;
+  
+  TIM3->CR1 |= TIM_CR1_CEN;
 
-
-  // Set the preload bit in CCMRx register and enable auto-reload preload
-  TIM3->CCMR2 |= TIM_CCMR2_OC3PE;
-  TIM3->CR1 |= TIM_CR1_ARPE;
-
-  return config;
+  return servo;
 } 

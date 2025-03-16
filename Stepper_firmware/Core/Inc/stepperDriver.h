@@ -11,6 +11,7 @@ typedef struct
     uint16_t data[ARRAY_SIZE];
     // uint8_t direction;
     size_t size;
+    uint16_t success;
 } ArrayStruct_T;
 
 typedef struct
@@ -23,7 +24,7 @@ typedef struct
 } Motor_config_T;
 
 typedef struct
-{
+{   uint16_t parse_success;    
     uint16_t id;
     int16_t deg;
     uint16_t steps;
@@ -33,7 +34,7 @@ typedef struct
     uint16_t lowSpeedInterval;
     uint16_t highSpeedInterval;
     uint32_t _index;
-    volatile uint8_t _pinstate;
+    volatile uint16_t _pinstate;
     volatile uint32_t _start_time;
     uint16_t stepsPer360;
 } Task_T;
@@ -42,6 +43,7 @@ typedef struct
 {
     Task_T task[MAX_TASK];
     uint16_t length;
+    uint16_t parse_success;
 } Task_lst_T;
 
 typedef struct
