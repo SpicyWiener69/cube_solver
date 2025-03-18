@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-typedef enum
+typedef enum State
 {
   RECEIVE,
   REQUEST_TRANSMIT,
@@ -37,7 +37,7 @@ int main(void)
 
   state = RECEIVE;
   while (1)
-  { 
+  {
     CommandStr commands;
     Task_lst_T task_lst;
     switch (state)
@@ -46,28 +46,30 @@ int main(void)
       commands = recieve_bytes_until(1000, '#');
       transmit_command(commands);
       task_lst = parse_string_to_tasks(commands);
-      if (!task_lst.parse_success){
+      if (!task_lst.parse_success)
+      {
         state = REQUEST_TRANSMIT;
         break;
-        }
+      }
       state = SOLVING;
       break;
 
     case SOLVING:
       for (int i = 0; i < task_lst.length; ++i)
       {
-        
+
         Task_T task = task_lst.task[i];
-        if (task.id == 'S')
+        if (task.id == 'G')
         {
           moveServoMotorAbs(servo, task.deg);
         }
         else
-        { ResetUsTimer();
+        {
+          ResetUsTimer();
           Motor_config_T motor = findMotorById(task.id, motorList);
           ArrayStruct_T profile = generateTrapezoidProfile(task);
           // if(!profile.success){
-          //   state = REQUEST_TRANSMIT;            
+          //   state = REQUEST_TRANSMIT;
           //   break;
           // }
           updateTaskProfilePtr(&task, &profile);
@@ -91,150 +93,166 @@ int main(void)
     }
   }
 }
-  // Motor_config_T initMotorLR(void)
-  // {
-  //   Motor_config_T MotorLR = {
-  //       .id = 'L',
-  //       .GPIO = GPIOA,
-  //       .dirPin = 6,
-  //       .stepPin = 7};
-  //   return MotorLR;
-  // }
 
-  // Motor_config_T initMotorD(void)
-  // {
-  //   Motor_config_T MotorD = {
-  //       .id = 'D',
-  //       .GPIO = GPIOB,
-  //       .dirPin = 4,
-  //       .stepPin = 5};
-  //   return MotorD;
-  // }
-
-  // Motor_config_T initMotorC(void)
-  // {
-  //   Motor_config_T MotorC = {
-  //       .id = 'C',
-  //       .GPIO = GPIOB,
-  //       .dirPin = 8,
-  //       .stepPin = 9};
-  //   return MotorC;
-  // }
-
-  // Motor_config_T initMotorT(void)
-  // {
-  //   Motor_config_T MotorT = {
-  //       .id = 'T',
-  //       .GPIO = GPIOB,
-  //       .dirPin = 14,
-  //       .stepPin = 15};
-  //   return MotorT;
-  // }
-
-  Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst)
+Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst)
+{
+  for (int i = 0; i < lst.length; ++i)
   {
-    for (int i = 0; i < lst.length; ++i)
+    if (id == lst.Motor_config[i].id)
     {
-      if (id == lst.Motor_config[i].id)
-      {
-        return lst.Motor_config[i];
-      }
+      return lst.Motor_config[i];
     }
   }
+}
 
-  Task_T init_task(void)
+// Task_T init_task(void)
+// {
+//   Task_T task = {
+//       .lowSpeedInterval = 1000,
+//       .highSpeedInterval = 500,
+//       .accel = 5,
+//       ._index = 0,
+//       ._pinstate = 0,
+//       ._start_time = 0,
+//       .stepsPer360 = 1600,
+//   };
+//   return task;
+// }
+
+uint16_t ValidMotorID(char motorID){
+  switch (motorID)
   {
-    Task_T task = {
-        .lowSpeedInterval = 1000,
-        .highSpeedInterval = 500,
-        .accel = 5,
-        ._index = 0,
-        ._pinstate = 0,
-        ._start_time = 0,
-        .stepsPer360 = 400,
-    };
+  case 'T':
+  case 'L':
+  case 'D':
+  case 'G':
+  case 'C':
+    return 1;
+  default:
+    return 0;
+  }
+
+}
+
+Task_T initTaskByMotorID(char motorID)
+{
+  Task_T task = {
+      ._index = 0,
+      ._pinstate = 0,
+      ._start_time = 0,
+  };
+  switch (motorID)
+  {
+  case 'T':
+    task.lowSpeedInterval = 1000;
+    task.highSpeedInterval = 500;
+    task.accel = 5;
+    task.stepsPer360 = 200;
+    break;
+  case 'L':
+    task.lowSpeedInterval = 1000;
+    task.highSpeedInterval = 500;
+    task.accel = 5;
+    task.stepsPer360 = 1600;
+    break;
+  case 'D':
+    task.lowSpeedInterval = 1000;
+    task.highSpeedInterval = 500;
+    task.accel = 5;
+    task.stepsPer360 = 200;
+    break;
+  case 'G':
+    task.lowSpeedInterval = 1000;
+    task.highSpeedInterval = 500;
+    task.accel = 5;
+    task.stepsPer360 = 1600;
+    break;
+  case 'C':
+    task.lowSpeedInterval = 1000;
+    task.highSpeedInterval = 500;
+    task.accel = 5;
+    task.stepsPer360 = 1600;
+    break;
+  default:
+    // Use default values
+    break;
+  }
+
+  return task;
+}
+
+Task_T string_to_task(char *str)
+{
+  Task_T task;
+  char motorID;
+  int32_t deg;
+  if (sscanf(str, " %c:%ld", &motorID, &deg) != 2)
+  {
+    task.parse_success = 0;
     return task;
   }
-
-  Task_T string_to_task(char *str)
-  {
-    Task_T task = init_task();
-    char motorID;
-    int32_t deg;
-    if (sscanf(str, " %c:%ld", &motorID, &deg) != 2)
-    {
-      task.parse_success = 0;
-      return task;
-    }
-    switch (motorID)
-    {
-    case 'T':
-    case 'L':
-    case 'D':
-    case 'G':
-    case 'C':
-      break;
-    default:
-      task.parse_success = 0;
-      return task;
-      break;
-    }
-    /*servo motor , no deg to steps conversion */
-    task.deg = deg;
-    task.id = motorID;
-    task.direction = (deg > 0) ? 1 : -1;
-    task.steps = abs(deg) / ((float)360) * task.stepsPer360;
-    task.parse_success = 1;
+  if (!ValidMotorID(motorID)){
+    task.parse_success = 0;
     return task;
   }
+  task = initTaskByMotorID(motorID);
 
-  Task_lst_T parse_string_to_tasks(CommandStr command_str)
-  {
-    uint32_t i = 0;
-    char *pch;
-    Task_lst_T task_lst = {.length = 0, .task = {{0}}};
-    pch = strtok(command_str.arr, ";");
-    while (pch != NULL)
-    {
-      Task_T task_instance = string_to_task(pch);
-      if (!task_instance.parse_success)
-      { // parse error, early return
-        task_lst.parse_success = 0;
-        return task_lst;
-      }
-      task_lst.task[i] = task_instance;
-      pch = strtok(NULL, ";");
-      i++;
-    }
-    task_lst.length = i;
-    task_lst.parse_success = 1;
-    return task_lst;
-  }
+  /*servo motor , no deg to steps conversion */
+  task.deg = deg;
+  task.id = motorID;
+  task.direction = (deg > 0) ? 1 : -1;
+  task.steps = abs(deg) / ((float)360) * task.stepsPer360;
+  task.parse_success = 1;
+  return task;
+}
 
-  void Error_Handler(void)
+Task_lst_T parse_string_to_tasks(CommandStr command_str)
+{
+  uint32_t i = 0;
+  char *pch;
+  Task_lst_T task_lst = {.length = 0, .task = {{0}}};
+  pch = strtok(command_str.arr, ";");
+  while (pch != NULL)
   {
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-    __disable_irq();
-    while (1)
-    {
+    Task_T task_instance = string_to_task(pch);
+    if (!task_instance.parse_success)
+    { // parse error, early return
+      task_lst.parse_success = 0;
+      return task_lst;
     }
-    /* USER CODE END Error_Handler_Debug */
+    task_lst.task[i] = task_instance;
+    pch = strtok(NULL, ";");
+    i++;
   }
+  task_lst.length = i;
+  task_lst.parse_success = 1;
+  return task_lst;
+}
+
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
 
 #ifdef USE_FULL_ASSERT
-  /**
-   * @brief  Reports the name of the source file and the source line number
-   *         where the assert_param error has occurred.
-   * @param  file: pointer to the source file name
-   * @param  line: assert_param error line source number
-   * @retval None
-   */
-  void assert_failed(uint8_t *file, uint32_t line)
-  {
-    /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    /* USER CODE END 6 */
-  }
+/**
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
 #endif /* USE_FULL_ASSERT */

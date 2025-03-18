@@ -51,24 +51,9 @@ Motor_config_T initMotorC(void);
 
 Task_T parse_string_to_task(char* str);
 Task_lst_T parse_string_to_tasks(CommandStr command_str);
+uint16_t ValidMotorID(char motorID);
+Task_T initTaskByMotorID(char motorID);
 Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst);
-
-// #define B1_Pin GPIO_PIN_13
-// #define B1_GPIO_Port GPIOC
-// #define USART_TX_Pin GPIO_PIN_2
-// #define USART_TX_GPIO_Port GPIOA
-// #define USART_RX_Pin GPIO_PIN_3
-// #define USART_RX_GPIO_Port GPIOA
-// #define LD2_Pin GPIO_PIN_5
-// #define LD2_GPIO_Port GPIOA
-// #define TMS_Pin GPIO_PIN_13
-// #define TMS_GPIO_Port GPIOA
-// #define TCK_Pin GPIO_PIN_14
-// #define TCK_GPIO_Port GPIOA
-// #define SWO_Pin GPIO_PIN_3
-// #define SWO_GPIO_Port GPIOB
-
-
 
 #ifdef __cplusplus
 }

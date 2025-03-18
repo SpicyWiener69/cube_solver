@@ -2,11 +2,11 @@
 #include "stm32f4xx.h"
 #include "gpio_def.h"
 
-#define ARRAY_SIZE 2000
+#define ARRAY_SIZE 5000
 #define MAX_TASK 400
 #define MAX_STEPPER 6
 
-typedef struct
+typedef struct ArrayStruct_T
 {
     uint16_t data[ARRAY_SIZE];
     // uint8_t direction;
@@ -14,7 +14,7 @@ typedef struct
     uint16_t success;
 } ArrayStruct_T;
 
-typedef struct
+typedef struct Motor_config_T
 {
     uint8_t id;
     GPIO_TypeDef *GPIO;
@@ -23,7 +23,7 @@ typedef struct
 
 } Motor_config_T;
 
-typedef struct
+typedef struct Task_T
 {   uint16_t parse_success;    
     uint16_t id;
     int16_t deg;
@@ -39,28 +39,18 @@ typedef struct
     uint16_t stepsPer360;
 } Task_T;
 
-typedef struct
+typedef struct Task_lst_T
 {
     Task_T task[MAX_TASK];
     uint16_t length;
     uint16_t parse_success;
 } Task_lst_T;
 
-typedef struct
+typedef struct Motor_lst_T
 {
     Motor_config_T Motor_config[MAX_STEPPER];
     uint8_t length;
 } Motor_lst_T;
-
-// typedef struct
-// {
-//     uint8_t id;
-//     uint16_t steps;
-//     uint8_t direction;
-// } Task_T;
-
-// static void setPin(GPIO_TypeDef *GPIOx, uint32_t pin);
-// static void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin);
 
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
