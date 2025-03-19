@@ -5,11 +5,11 @@ import math
 @dataclass
 class Dim3x3:
 
-    SIDE_LEN = 50
-    SLICE_LEN = 50/3
+    SIDE_LEN = 55
+    SLICE_LEN = SIDE_LEN/3
 
     #EFFECTOR D (DOWN)
-    D_HOME = 30
+    D_HOME = 15
     D_LAYER_TOP =D_HOME +SLICE_LEN * 1
     D_LAYER_MID =D_HOME +SLICE_LEN * 2        
     D_LAYER_ALL =D_HOME +SLICE_LEN * 3
@@ -121,16 +121,7 @@ def remove_repetitions(modified_dataclasses):    #->list[NotationDataClass]
         
 
     return cleaned_dataclasses
-    # for i in range(len(modified_dataclasses)-1):
-    #     data1 = modified_dataclasses[i]
-    #     data2 = modified_dataclasses[i+1]
-    #     if (data1.name == data2.name) and (data1.direction == data2.direction*-1):
-    #         continue
-    #     cleaned_dataclasses.append(data1)
-    #     if i >= len(modified_dataclasses - 2): 
-    #         cleaned_dataclasses.append(data2)
-
-
+    
 @dataclass
 class EffectorMovement:
     Effector:str
@@ -142,7 +133,31 @@ class EffectorMovement:
             self.isrelative = True
         else:
             self.isrelative = False
+
+def string_to_dataclasses(user_input_str):
+    dataclasses_list = []
+    # Split the string by ';' and remove any empty tokens
+    tokens = [t.strip() for t in user_input_str.split(';') if t.strip()]
+    
+    for token in tokens:
+        # Split the token by ':' and check that we have exactly 2 parts.
+        parts = token.split(':')
+        if len(parts) != 2:
+            raise ValueError(f"Invalid token format: '{token}'. Expected format 'effector:movement'.")
         
+        effector = parts[0].strip()
+        movement_str = parts[1].strip()
+        
+        # Validate that the movement part can be converted to an integer.
+        try:
+            movement = int(movement_str)
+        except ValueError:
+            raise ValueError(f"Invalid movement value in token: '{token}'. Movement must be an integer.")
+        
+        dataclasses_list.append(EffectorMovement(Effector=effector, movement=movement))
+    
+    return dataclasses_list
+
 
 def dataclasses_to_effector_abs(dataclasses):
     abs_states = []
@@ -193,9 +208,9 @@ def effector_abs_to_relative(effector_abs_commands): #->list[]
     #all linear movements, value in mm
     relative_commands = []
     previous_abs_position = {
-        'D':10,   
-        'C':50,
-        'G':50
+        'D':0,   
+        'C':70,
+        'G':63
     }
 
     for command in effector_abs_commands:
@@ -214,19 +229,28 @@ def gear_ratio_conversion(relative_commands):
     ratios = { 
         'LR':1,
         'T':9.875,
-        'C':360/(40),
+        'C':(360/(40)) / 2,  #another division of 2 for double the movement of C motor pulley
         'D':360/(63),
-        'G':360/(46.3),
+        'G':-(360)/(46.3),  #negative for servo motor direction adjustment
     }
     for relative_command in relative_commands:
         ratio = ratios[relative_command.Effector]
         motor = relative_command.Effector
         deg = ratio * relative_command.movement
-        motor_commands.append(f"{motor}:{deg}")
+        deg_rounded = round(deg)
+        motor_commands.append(f"{motor}:{deg_rounded}")
     ret = "; ".join(motor_commands)
     return ret
 
-def convert_all(notations):
+
+def usr_abs_to_motor_commands(user_input_str):
+    dataclasses = string_to_dataclasses(user_input_str) 
+    relative_commands = effector_abs_to_relative(dataclasses)
+    motor_commands = gear_ratio_conversion(relative_commands)
+    return motor_commands
+
+
+def notation_to_motor_commands(notations):
     dataclasses = notations_to_dataclasses(notations)
     
     modified_dataclasses = notations_to_modified_notations(dataclasses)
@@ -241,13 +265,11 @@ def convert_all(notations):
 
     return motor_commands
 
-
 if __name__ == "__main__":
-    notations = ['U',"U'"]
-    notations = ['F',"F'",'U']
-    notations = ['F']
+    notations = ['U']
+    ic(usr_abs_to_motor_commands('D:10'))
+
     
-    #notations = ["U'","F2","U2","R'","F"]
     dataclasses = notations_to_dataclasses(notations)
     ic(dataclasses)
     
