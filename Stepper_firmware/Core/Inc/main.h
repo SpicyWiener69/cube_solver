@@ -38,6 +38,12 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
+typedef struct action{
+	char id;
+	int32_t magnitude;
+	int32_t parse_success;
+} Action_T;
+
 void SystemClock_Config(void);
 void EXTI_Init(void);
 void NVIC_Init(void);
@@ -49,9 +55,10 @@ Motor_config_T initMotorD(void);
 Motor_config_T initMotorT(void);
 Motor_config_T initMotorC(void);
 
-Task_T parse_string_to_task(char* str);
-Task_lst_T parse_string_to_tasks(CommandStr command_str);
-uint16_t ValidMotorID(char motorID);
+Action_T parse_string(char* str);
+Task_T string_to_task(char motorID, int32_t deg);
+//Task_lst_T parse_string_to_tasks(CommandStr command_str);
+uint16_t ValidID(char motorID);
 Task_T initTaskByMotorID(char motorID);
 Motor_config_T findMotorById(uint8_t id, Motor_lst_T lst);
 

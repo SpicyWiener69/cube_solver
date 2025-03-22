@@ -21,7 +21,7 @@ class Dim3x3:
     #D_LAYER_ALL =D_HOME +SLICE_LEN * 3
 
     #EFFECTOR C(CLAMPING)
-    C_HOME_OFFSET = 5
+    C_HOME_OFFSET = 10
     C_HOME =SIDE_LEN + C_HOME_OFFSET
     C_CLAMP =SIDE_LEN
     
@@ -47,8 +47,8 @@ class NotationConvertor:
     
 def verify_notations(notations):
     ending = ["'" , "2"]
-
-    return True
+    #raise error
+    return notations
 
 def notations_to_dataclasses(notations): #->list[NotationDataClass]
     dataclasses = []
@@ -134,14 +134,20 @@ def remove_repetitions(modified_dataclasses):    #->list[NotationDataClass]
     if DEBUG:
         ic(cleaned_dataclasses)
     return cleaned_dataclasses
-    
-@dataclass
-class EffectorMovement:
-    Effector:str
-    movement:int
-    
 
-def string_to_dataclasses(user_input_str):
+#     dataclasses = notations_to_dataclasses(notations)
+#     modified_dataclasses = notations_to_modified_notations(dataclasses)
+#     cleaned_dataclasses = remove_repetitions(modified_dataclasses)   
+def notation_to_clean_dataclasses(notations):
+    steps = [verify_notations,notations_to_dataclasses,notations_to_modified_notations,remove_repetitions]
+    data = notations
+    for step in steps:
+        data = step(data)
+    if DEBUG:
+        ic(data)
+    return data
+
+def string_to_action_command(user_input_str) ->list[dict[str,int]]:
     dataclasses_list = []
     # Split the string by ';' and remove any empty tokens
     tokens = [t.strip() for t in user_input_str.split(';') if t.strip()]
@@ -150,109 +156,47 @@ def string_to_dataclasses(user_input_str):
         # Split the token by ':' and check that we have exactly 2 parts.
         parts = token.split(':')
         if len(parts) != 2:
-            raise ValueError(f"Invalid token format: '{token}'. Expected format 'effector:movement'.")
+            raise ValueError(f"Invalid token format: '{token}'. Expected format 'operation:magnitude'.")
         
-        effector = parts[0].strip()
-        movement_str = parts[1].strip()
+        operation = parts[0].strip()
+        magnitude_str = parts[1].strip()
         
-        # Validate that the movement part can be converted to an integer.
+        # Validate that the magnitude part can be converted to an integer.
         try:
-            movement = int(movement_str)
+            magnitude = int(magnitude_str)
         except ValueError:
-            raise ValueError(f"Invalid movement value in token: '{token}'. Movement must be an integer.")
+            raise ValueError(f"Invalid magnitude value in token: '{token}'. magnitude must be an integer.")
         
-        dataclasses_list.append(EffectorMovement(Effector=effector, movement=movement))
+        dataclasses_list.append({"operation":operation, "magnitude":magnitude})
     if DEBUG:
         ic(dataclasses_list)
     return dataclasses_list
 
 
-def dataclasses_to_effector_abs(dataclasses):
-    abs_states = []
-
-    notation_to_commands = {
-        'x':lambda dir,rep: [
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME),
-                            EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'D', movement = 0),
-                            EffectorMovement(Effector = 'L', movement = (90 * dir * rep)),
-                            EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME)
-                            ],
-
-        'y':lambda dir,rep: [
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
-                            EffectorMovement(Effector = 'G', movement = Dim3x3.G_GRIP),
-                            EffectorMovement(Effector = 'T', movement = (90 * dir* rep)),
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_HOME),
-                            EffectorMovement(Effector = 'T', movement = (90 * dir * rep * -1)), #return to original value.
-                            EffectorMovement(Effector = 'G', movement = Dim3x3.G_HOME),
-                            ],   
-                               
-        'U':lambda dir,rep: [
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_TOP),
-                            EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'G', movement= Dim3x3.G_GRIP),
-                            EffectorMovement(Effector = 'T', movement= (90* dir * rep)),
-                            EffectorMovement(Effector = 'G', movement= Dim3x3.G_HOME),
-                            EffectorMovement(Effector = 'C', movement = Dim3x3.C_HOME),
-                            EffectorMovement(Effector = 'D', movement =0),
-                            EffectorMovement(Effector = 'T', movement =(90 * dir * rep * -1)), 
-                            EffectorMovement(Effector = 'D', movement =Dim3x3.D_HOME),
-                            ],
-
-        'u':lambda dir,rep: [
-                            EffectorMovement(Effector = 'D', movement = Dim3x3.D_LAYER_MID),
-                            EffectorMovement(Effector = 'C', movement = Dim3x3.C_CLAMP),
-                            EffectorMovement(Effector = 'L', movement = 90 * dir * rep),
-                            EffectorMovement(Effector = 'C', movement =Dim3x3.C_HOME)
-                            ],
-    }
 
 
-    for notation in dataclasses:
-        movement = notation_to_commands.get(notation.name)(notation.direction, notation.repetition)
-        abs_states.extend(movement)
-    if DEBUG:
-        ic(abs_states)
-    return abs_states
-
-class EffectorConverter:
+class MotorStateTracker:
     def __init__(self):
-        #all linear movements unit in mm
+        #all linear magnitudes unit in mm
         self.HOME_STATE = {
          'D':0,   
          'C':70,
          'G':65
         }
         self.motor_state = self.HOME_STATE.copy()
-            
-    def abs_to_relative(self,effector_abs_commands): #->list[]
-        relative_commands = []
-        for command in effector_abs_commands:
-            #only linear effectors need abs->relative conversions 
-            if command.Effector in ['D','C','G']: #self.Effector in ['L', 'T']:
-                relative = command.movement - self.motor_state[command.Effector]   
-                #update motor_state
-                self.motor_state[command.Effector] = command.movement              
-                command.movement = relative
-                #command.isrelative = True
-            relative_commands.append(command)
-        if DEBUG:
-            ic(relative_commands)
-        return relative_commands
-        
-    def go_home(self):
+
+    def home_command(self) -> str:
         
         diff_D = self.HOME_STATE['D'] - self.motor_state['D'] 
         diff_C = self.HOME_STATE['C'] - self.motor_state['C'] 
         diff_G = self.HOME_STATE['G'] - self.motor_state['G'] 
         
         home_commands = [
-        EffectorMovement(Effector = 'D', movement = diff_D),
-        EffectorMovement(Effector = 'C', movement = diff_C),
-        EffectorMovement(Effector = 'G', movement = diff_G)
+        {"operation" :'D', "magnitude" : diff_D},
+        {"operation" :'C', "magnitude" : diff_C},
+        {"operation" :'G', "magnitude" : diff_G}
         ]
-        motor_commands = self.gear_ratio_conversion(home_commands)
+        motor_commands = self._gear_ratio_conversion(home_commands)
         self.motor_state = self.HOME_STATE.copy()
         
         if DEBUG:
@@ -260,24 +204,105 @@ class EffectorConverter:
         
         return motor_commands
 
-    def gear_ratio_conversion(self,relative_commands):
+    def dataclass_to_motor_command(self,dataclasses):
+        abs = self._from_dataclass_to_abs(dataclasses)
+        relative = self._abs_to_relative(abs)
+        motor_commands = self._gear_ratio_conversion(relative)
+        return motor_commands
+    
+    def action_to_motor_command(self,actions):
+        relative = self._abs_to_relative(actions)
+        motor_commands = self._gear_ratio_conversion(relative)
+        return motor_commands
+
+    def _from_dataclass_to_abs(self,dataclasses):
+        abs_states = []
+
+        notation_to_commands = {
+            'x':lambda dir,rep: [
+                                {"operation":'D', "magnitude": Dim3x3.D_HOME},
+                                {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
+                                {"operation":'W', "magnitude":500},
+                                {"operation":'D', "magnitude": 0},
+                                {"operation":'L', "magnitude": (90 * dir * rep)},
+                                {"operation":'D', "magnitude": Dim3x3.D_HOME},
+                                {"operation":'C', "magnitude":Dim3x3.C_HOME},
+                                ],
+
+            'y':lambda dir,rep: [
+                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
+                                {"operation":'G', "magnitude": Dim3x3.G_GRIP},
+                                {"operation":'T', "magnitude": (90 * dir* rep)},
+                                {"operation":'D', "magnitude": Dim3x3.D_HOME},
+                                {"operation":'T', "magnitude": (90 * dir * rep * -1)}, #return to original value.
+                                {"operation":'G', "magnitude": Dim3x3.G_HOME},
+                                ],   
+                                
+            'U':lambda dir,rep: [
+                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
+                                {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
+                                {"operation":'G', "magnitude":Dim3x3.G_GRIP},
+                                {"operation":'W', "magnitude":500},
+                                {"operation":'T', "magnitude":(90* dir * rep)},
+                                {"operation":'W', "magnitude":500},
+                                {"operation":'G', "magnitude":Dim3x3.G_HOME},
+                                {"operation":'C', "magnitude": Dim3x3.C_HOME},
+                                {"operation":'D', "magnitude":0},
+                                {"operation":'T', "magnitude":(90 * dir * rep * -1)}, 
+                                {"operation":'D', "magnitude":Dim3x3.D_HOME},
+                                ],
+
+            'u':lambda dir,rep: [
+                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_MID},
+                                {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
+                                {"operation":'L', "magnitude": 90 * dir * rep},
+                                {"operation":'C', "magnitude":Dim3x3.C_HOME}
+                                ],
+        }
+        for notation in dataclasses:
+            magnitude = notation_to_commands.get(notation.name)(notation.direction, notation.repetition)
+            abs_states.extend(magnitude)
+        if DEBUG:
+            ic(abs_states)
+        return abs_states
+
+    def _abs_to_relative(self,operation_abs_commands): #->list[]
+        relative_commands = []
+        for command in operation_abs_commands:
+            #only linear operations need abs->relative conversions 
+            if command["operation"] in ['D','C','G']: 
+                relative = command["magnitude"]- self.motor_state[command["operation"]]   
+                #update motor_state
+                self.motor_state[command["operation"]] = command["magnitude"]              
+                command["magnitude"] = relative
+                #command.isrelative = True
+            relative_commands.append(command)
+        if DEBUG:
+            ic(relative_commands)
+        return relative_commands
+        
+
+    def _gear_ratio_conversion(self,relative_commands):
         motor_commands = []
         #converted unit: deg
         ratios = { 
+            'W':1,
             'L':1,
             'T':9.875,
-            'C':(360/(40)) / 2,  # division of 2 for double the movement of C motor pulley
+            'C':(360/(40)) / 2,  # division of 2 for double the magnitude of C motor pulley
             'D':360/(63),
             'G':(-360/46.3) / 2,  #division of 2 ,negative for servo motor direction adjustment
         }
         for relative_command in relative_commands:
-            ratio = ratios[relative_command.Effector]
-            motor = relative_command.Effector
-            deg = ratio * relative_command.movement
+        #if relative_command["operation"] != 'W':
+            ratio = ratios[relative_command["operation"]]
+            motor = relative_command["operation"]
+            deg = ratio * relative_command["magnitude"]
             deg_rounded = round(deg)
             motor_commands.append(f"{motor}:{deg_rounded}")
         ret = "; ".join(motor_commands)
         if DEBUG:
+            
             ic(ret)
         return ret
 
@@ -286,30 +311,31 @@ class EffectorConverter:
 
 
 
-def usr_abs_to_motor_commands(user_input_str):
-    dataclasses = string_to_dataclasses(user_input_str) 
-    relative_commands = convertor.abs_to_relative(dataclasses)
-    motor_commands = convertor.gear_ratio_conversion(relative_commands)
-    return motor_commands
+# def usr_abs_to_motor_commands(user_input_str):
+#     dataclasses = string_to_dataclasses(user_input_str) 
+#     relative_commands = convertor.abs_to_relative(dataclasses)
+#     motor_commands = convertor.gear_ratio_conversion(relative_commands)
+#     return motor_commands
 
 
-def notation_to_motor_commands(notations):
-    dataclasses = notations_to_dataclasses(notations)
-    modified_dataclasses = notations_to_modified_notations(dataclasses)
-    cleaned_dataclasses = remove_repetitions(modified_dataclasses)
-    effector_abs_commands = dataclasses_to_effector_abs(cleaned_dataclasses)
-    relative_commands = convertor.abs_to_relative(effector_abs_commands)
-    motor_commands = convertor.gear_ratio_conversion(relative_commands)
-    return motor_commands
 
-def go_home():
-    return convertor.go_home()
+# def notation_to_motor_commands(notations):
+#     dataclasses = notations_to_dataclasses(notations)
+#     modified_dataclasses = notations_to_modified_notations(dataclasses)
+#     cleaned_dataclasses = remove_repetitions(modified_dataclasses)
+#     operation_abs_commands = convertor.from_dataclass_to_abs(cleaned_dataclasses)
+#     relative_commands = convertor.abs_to_relative(operation_abs_commands)
+#     motor_commands = convertor.gear_ratio_conversion(relative_commands)
+#     return motor_commands
+
 
 DEBUG = False
-convertor = EffectorConverter()
+# convertor = operationConverter()
 
 if __name__ == "__main__":
     DEBUG = True
+    convertor = MotorStateTracker()
     notations = ['U']
-    notation_to_motor_commands(notations = notations)
-    convertor.go_home()
+    dataclasses = notation_to_clean_dataclasses(notations)
+    commands = convertor.dataclass_to_motor_command(dataclasses)
+    commands = convertor.home_command()

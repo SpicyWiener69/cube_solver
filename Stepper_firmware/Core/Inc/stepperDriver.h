@@ -3,7 +3,7 @@
 #include "gpio_def.h"
 
 #define ARRAY_SIZE 5000
-#define MAX_TASK 400
+#define MAX_TASK 500
 #define MAX_STEPPER 6
 
 typedef struct ArrayStruct_T
@@ -26,7 +26,7 @@ typedef struct Motor_config_T
 typedef struct Task_T
 {   uint16_t parse_success;    
     uint16_t id;
-    int16_t deg;
+    int16_t relative_deg;
     uint16_t steps;
     int16_t direction;
     uint16_t accel;

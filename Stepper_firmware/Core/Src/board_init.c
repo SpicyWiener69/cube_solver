@@ -1,104 +1,93 @@
 #include "board_init.h"
 
-
-
-
-void SystemClock_Config(void) 
+void SystemClock_Config(void)
 { /*mco*/
-  //RCC->CFGR |= (3<< RCC_CFGR_MCO1_Pos); //PLL clock selected
-  //RCC->CFGR |= 0b110 << RCC_CFGR_MCO1PRE_Pos; //mco div by 4
+	// RCC->CFGR |= (3<< RCC_CFGR_MCO1_Pos); //PLL clock selected
+	// RCC->CFGR |= 0b110 << RCC_CFGR_MCO1PRE_Pos; //mco div by 4
 
-  RCC->CR |= RCC_HSI_ON;
-  while (!(RCC->CR & RCC_CR_HSIRDY))
-  {
-  }; // wait till HSI is ready
+	RCC->CR |= RCC_HSI_ON;
+	while (!(RCC->CR & RCC_CR_HSIRDY))
+	{
+	}; // wait till HSI is ready
 
-  FLASH->ACR |= FLASH_ACR_ICEN | FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_3WS;
-  
-  /*pll source = HSI*/
-  RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSI;
-  /* M = 8, N = 168, P = 4 */
-  RCC->PLLCFGR = (8 << RCC_PLLCFGR_PLLM_Pos) | (168 << RCC_PLLCFGR_PLLN_Pos) | (0b01 <<RCC_PLLCFGR_PLLP_Pos);
-  // RCC->PLLCFGR |= ;
-  // RCC->PLLCFGR |= (0b01 <<RCC_PLLCFGR_PLLP_Pos ); // div by 4
-  
-  /*enable PLL*/
-  RCC->CR |= RCC_CR_PLLON;
-  /*select PLL as sysclk*/
-  RCC->CFGR |= RCC_CFGR_SW_PLL;
-  
-  /*config APBx clock divisions*/
-  RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-  RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
-  RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+	FLASH->ACR |= FLASH_ACR_ICEN | FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_3WS;
 
-  
-  SystemCoreClockUpdate();
+	/*pll source = HSI*/
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSI;
+	/* M = 8, N = 168, P = 4 */
+	RCC->PLLCFGR = (8 << RCC_PLLCFGR_PLLM_Pos) | (168 << RCC_PLLCFGR_PLLN_Pos) | (0b01 << RCC_PLLCFGR_PLLP_Pos);
+	// RCC->PLLCFGR |= ;
+	// RCC->PLLCFGR |= (0b01 <<RCC_PLLCFGR_PLLP_Pos ); // div by 4
+
+	/*enable PLL*/
+	RCC->CR |= RCC_CR_PLLON;
+	/*select PLL as sysclk*/
+	RCC->CFGR |= RCC_CFGR_SW_PLL;
+
+	/*config APBx clock divisions*/
+	RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+	RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
+	RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+
+	SystemCoreClockUpdate();
 }
 
+void EXTI_Init()
+{
+	/*enable SYSCFG on APB2*/
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
-void EXTI_Init(){
-  /*enable SYSCFG on APB2*/
-  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+	/**/
+	SYSCFG->EXTICR[BUTTONPIN / 4] &= ~(SYSCFG_EXTICR3_EXTI8_Msk);
+	SYSCFG->EXTICR[BUTTONPIN / 4] |= SYSCFG_EXTICR3_EXTI8_PC;
 
-  /**/
-  SYSCFG->EXTICR[BUTTONPIN/4] &= ~(SYSCFG_EXTICR3_EXTI8_Msk);
-  SYSCFG->EXTICR[BUTTONPIN/4] |= SYSCFG_EXTICR3_EXTI8_PC;
+	/* Setup the button's EXTI line as an interrupt. */
+	EXTI->IMR |= (1 << BUTTONPIN);
+	// Enable the 'rising edge' trigger (button press).
+	EXTI->RTSR |= (1 << BUTTONPIN);
 
-    /* Setup the button's EXTI line as an interrupt. */
-    EXTI->IMR  |=  (1 << BUTTONPIN);
-    // Enable the 'rising edge' trigger (button press).
-    EXTI->RTSR |=  (1 << BUTTONPIN);
-
-    //EXTI->FTSR |=  (1 << BUTTONPIN);
-
+	// EXTI->FTSR |=  (1 << BUTTONPIN);
 }
 
-void NVIC_Init(){
-  NVIC_SetPriority(EXTI9_5_IRQn, 0x03);
-  NVIC_EnableIRQ(EXTI9_5_IRQn);
-
+void NVIC_Init()
+{
+	NVIC_SetPriority(EXTI9_5_IRQn, 0x03);
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
+void GPIO_Init()
+{
+	/*enable GPIO clocks*/
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 
-void GPIO_Init(){
-  /*enable GPIO clocks*/
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-  
-  /*set GPIOC P8 as input*/
-  GPIOC->MODER |=  (GPIO_MODER_INPUT << GPIO_MODER_MODER8_Pos);
- 
-  /*set GPIOA P5 as output*/ 
-  GPIOA->MODER |= (GPIO_MODER_OUTPUT << GPIO_MODER_MODER5_Pos);
+	/*set GPIOC P8 as input*/
+	GPIOC->MODER |= (GPIO_MODER_INPUT << GPIO_MODER_MODER8_Pos);
 
-  /*set GPIOA P8 as AF*/ 
-  GPIOA->MODER |= (GPIO_MODER_ALTERNATE << GPIO_MODER_MODER8_Pos);
-  GPIOA->OSPEEDR |= (0b11 << 8*2); 
-  /*set AF0*/
-  GPIOA->AFR[1] = 0b0000 << GPIO_AFRH_AFRH0;
-  
+	/*set GPIOA P5 as output*/
+	GPIOA->MODER |= (GPIO_MODER_OUTPUT << GPIO_MODER_MODER5_Pos);
+
+	/*set GPIOA P8 as AF*/
+	GPIOA->MODER |= (GPIO_MODER_ALTERNATE << GPIO_MODER_MODER8_Pos);
+	GPIOA->OSPEEDR |= (0b11 << 8 * 2);
+	/*set AF0*/
+	GPIOA->AFR[1] = 0b0000 << GPIO_AFRH_AFRH0;
 }
 
-void MhzTimer_Init(void)  
-{        
-  /*enable TIM2 on APB1, TIM2->CNT = 32bit*/
-  RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-  
-  /*counter enable */
-  TIM2->CR1 |= TIM_CR1_CEN;
+void MhzTimer_Init(void)
+{
+	/*enable TIM2 on APB1, TIM2->CNT = 32bit*/
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 
-  /*config prescaler*/
-  TIM2->PSC |= 84 -1;
+	/*counter enable */
+	TIM2->CR1 |= TIM_CR1_CEN;
 
-  /*update*/
-  TIM2->EGR = TIM_EGR_UG;
-  
+	/*config prescaler*/
+	TIM2->PSC |= 84 - 1;
 
+	/*update*/
+	TIM2->EGR = TIM_EGR_UG;
 }
-
-
-
 
 // void MX_USART2_UART_Init(void)
 // {

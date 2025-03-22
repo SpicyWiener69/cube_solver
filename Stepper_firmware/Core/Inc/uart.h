@@ -5,7 +5,7 @@
 #include "gpio_def.h"
 #include <string.h>
 
-#define MAX_RECEIVE_LENGTH 200
+#define MAX_RECEIVE_LENGTH 2000
 
 typedef struct{
     char arr[MAX_RECEIVE_LENGTH];
@@ -15,8 +15,10 @@ typedef struct{
 
 void Uart2_Init(void);
 uint8_t recieve_byte(void);
-void transmit_byte(uint8_t txb);
-CommandStr recieve_bytes_until(uint16_t maxlength, uint8_t symbol);
+
 void transmit_command(CommandStr);
+void transmit_bytes(char str[], uint16_t length);
+void transmit_byte(uint8_t txb);
+CommandStr recieve_bytes_until(uint8_t symbol);
 
 #endif

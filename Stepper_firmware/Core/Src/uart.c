@@ -41,6 +41,14 @@ void transmit_command(CommandStr command_str)
 //     transmit_byte('#');
 // }
 
+void transmit_bytes(char str[], uint16_t length)
+{
+    for (uint32_t i = 0; i < length; ++i)
+    {
+        transmit_byte(str[i]);
+    }
+    transmit_byte('#');
+}
 
 void transmit_byte(uint8_t txb)
 {
@@ -62,9 +70,10 @@ uint8_t recieve_byte(void)
 
 /*blocking function*/
 
-CommandStr recieve_bytes_until(uint16_t maxlength, uint8_t symbol)
+CommandStr recieve_bytes_until(uint8_t symbol)
 {
     uint16_t i = 0;
+    uint16_t maxlength = MAX_RECEIVE_LENGTH;
     CommandStr command_str = {
         .arr = {0},
         .success = 0,

@@ -50,11 +50,12 @@
 
 
 import serial
-from notation_movement_v2 import notation_to_motor_commands, usr_abs_to_motor_commands, go_home
+from notation_movement_v2 import notation_to_clean_dataclasses,string_to_action_command,MotorStateTracker
 
 class RobotController:
     def __init__(self, port_name='/dev/ttyACM0', baudrate=57600, timeout=3):
         """Initialize the serial connection and mode selection."""
+        self.motor_state_tracker = MotorStateTracker()
         self.port = serial.Serial(port=port_name, baudrate=baudrate, timeout=timeout)
         self.modes = {
             'n': self.notation_mode,
@@ -63,7 +64,6 @@ class RobotController:
         }
 
     def send_command(self, command):
-        
         command += '#'  # Append command end character
         print(f'sent:{command}')
         self.port.write(command.encode('ascii'))
@@ -75,7 +75,8 @@ class RobotController:
             raw_notation = input("Input notation (or '=' to exit): ")
             if raw_notation == '=':
                 break
-            command_str = notation_to_motor_commands(raw_notation.split())
+            dataclasses = notation_to_clean_dataclasses(raw_notation.split())
+            command_str = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
             self.send_command(command_str)
 
     def raw_mode(self):
@@ -84,7 +85,7 @@ class RobotController:
             if raw_command == '=':
                 break
             elif raw_command == 'home':
-                raw_command = go_home()
+                raw_command = self.motor_state_tracker.home_command()
             self.send_command(raw_command)
 
     def inverse_kinematics_mode(self):
@@ -93,10 +94,10 @@ class RobotController:
             if kinematics_input == '=':
                 break
             elif kinematics_input == 'home':
-                command_str = go_home()
+                command_str = self.motor_state_tracker.home_command()
             else:
-                command_str = usr_abs_to_motor_commands(kinematics_input)
-            
+                actions = string_to_action_command(kinematics_input)
+                command_str = self.motor_state_tracker.action_to_motor_command(actions)
             self.send_command(command_str)
 
     def run(self):
