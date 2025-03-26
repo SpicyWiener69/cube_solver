@@ -11,10 +11,11 @@ class Dim3x3:
     #SLICE_LEN = SIDE_LEN/3
 
     #EFFECTOR D (DOWN)
+    D_LOWER = 0
     D_HOME = 25
-    D_LAYER_TOP = 37
-    D_LAYER_MID = 55    
-    D_LAYER_ALL = 74
+    D_LAYER_TOP = 40
+    D_LAYER_MID = 59
+    D_LAYER_ALL = 80
 
     #D_LAYER_TOP =D_HOME +SLICE_LEN * 1
     #D_LAYER_MID =D_HOME +SLICE_LEN * 2        
@@ -26,9 +27,9 @@ class Dim3x3:
     C_CLAMP =SIDE_LEN
     
     #EFFECTOR G (GRIPPER)
-    G_OFFSET = 20
+    G_OFFSET = 25
     G_HOME = SIDE_LEN + G_OFFSET
-    G_GRIP = SIDE_LEN
+    G_GRIP = SIDE_LEN + 8
 
 
 @dataclass
@@ -185,7 +186,30 @@ class MotorStateTracker:
         }
         self.motor_state = self.HOME_STATE.copy()
 
-    def home_command(self) -> str:
+    def cube_alignment_command(self) -> str:
+        homing_str  = self.home_command()
+        alignment = [
+            {"operation":'D', "magnitude": Dim3x3.D_HOME},
+            {"operation":'W', "magnitude":500},
+            {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
+            {"operation":'W', "magnitude":500},
+            {"operation":'C', "magnitude": Dim3x3.C_HOME},
+            {"operation":'D', "magnitude": Dim3x3.D_LOWER},
+            {"operation":'T', "magnitude": 90},
+             {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
+            {"operation":'G', "magnitude": Dim3x3.G_GRIP},
+            {"operation":'W', "magnitude":1000},
+            {"operation":'G', "magnitude": Dim3x3.G_HOME},
+             {"operation":'D', "magnitude": Dim3x3.D_LOWER},
+            {"operation":'T', "magnitude": -90}, 
+            {"operation":'G', "magnitude": Dim3x3.G_HOME},
+            {"operation":'C', "magnitude":Dim3x3.C_HOME},
+            {"operation":'D', "magnitude": Dim3x3.D_HOME},
+        ]
+        motor_commands = self.action_to_motor_command(alignment)
+        return homing_str + motor_commands
+    
+    def home_command(self) -> str:#TODO
         
         diff_D = self.HOME_STATE['D'] - self.motor_state['D'] 
         diff_C = self.HOME_STATE['C'] - self.motor_state['C'] 
@@ -230,15 +254,24 @@ class MotorStateTracker:
                                 ],
 
             'y':lambda dir,rep: [
-                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
-                                {"operation":'G', "magnitude": Dim3x3.G_GRIP},
-                                {"operation":'T', "magnitude": (90 * dir* rep)},
-                                {"operation":'D', "magnitude": Dim3x3.D_HOME},
-                                {"operation":'T', "magnitude": (90 * dir * rep * -1)}, #return to original value.
                                 {"operation":'G', "magnitude": Dim3x3.G_HOME},
+                                {"operation":'W', "magnitude":300},
+                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_ALL},
+                                {"operation":'W', "magnitude":300},
+                                {"operation":'G', "magnitude": Dim3x3.G_GRIP},
+                                {"operation":'W', "magnitude":400},
+                                {"operation":'D', "magnitude": Dim3x3.D_HOME},
+                                {"operation":'T', "magnitude": (90 * dir* rep)},
+                                {"operation":'D', "magnitude": Dim3x3.D_LAYER_ALL},
+                                {"operation":'G', "magnitude": Dim3x3.G_HOME},
+                                {"operation":'W', "magnitude":300},
+                                {"operation":'D', "magnitude": Dim3x3.D_LOWER},
+                                {"operation":'T', "magnitude": (90 * dir * rep * -1)}, #return to original value.
+                                {"operation":'D', "magnitude": Dim3x3.D_HOME}
                                 ],   
                                 
             'U':lambda dir,rep: [
+                                {"operation":'C', "magnitude": Dim3x3.C_HOME},    
                                 {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
                                 {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
                                 {"operation":'G', "magnitude":Dim3x3.G_GRIP},
@@ -253,10 +286,19 @@ class MotorStateTracker:
                                 ],
 
             'u':lambda dir,rep: [
+                                {"operation":'C', "magnitude": Dim3x3.C_HOME},
                                 {"operation":'D', "magnitude": Dim3x3.D_LAYER_MID},
+                                {"operation":'W', "magnitude":400},
                                 {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
-                                {"operation":'L', "magnitude": 90 * dir * rep},
-                                {"operation":'C', "magnitude":Dim3x3.C_HOME}
+                                {"operation":'G', "magnitude":Dim3x3.G_GRIP},
+                                {"operation":'W', "magnitude":500},
+                                {"operation":'T', "magnitude":(90* dir * rep)},
+                                {"operation":'W', "magnitude":500},
+                                {"operation":'G', "magnitude":Dim3x3.G_HOME},
+                                {"operation":'C', "magnitude": Dim3x3.C_HOME},
+                                {"operation":'D', "magnitude":Dim3x3.D_LOWER},
+                                {"operation":'T', "magnitude":(90 * dir * rep * -1)}, 
+                                {"operation":'D', "magnitude":Dim3x3.D_HOME},
                                 ],
         }
         for notation in dataclasses:
@@ -335,7 +377,7 @@ DEBUG = False
 if __name__ == "__main__":
     DEBUG = True
     convertor = MotorStateTracker()
-    notations = ['U']
+    notations = ['D']
     dataclasses = notation_to_clean_dataclasses(notations)
     commands = convertor.dataclass_to_motor_command(dataclasses)
     commands = convertor.home_command()

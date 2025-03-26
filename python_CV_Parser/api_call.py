@@ -15,5 +15,6 @@ def fetchSolution(cube_state):
     os.chdir(original_wd)
     return solution
 
+
 cube_state = 'DLRRFULLDUBFDURDBFBRBLFU'
 fetchSolution(cube_state)

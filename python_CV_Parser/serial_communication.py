@@ -50,7 +50,7 @@
 
 
 import serial
-from notation_movement_v2 import notation_to_clean_dataclasses,string_to_action_command,MotorStateTracker
+from notation_movement_v2 import notation_to_clean_dataclasses, string_to_action_command, MotorStateTracker
 
 class RobotController:
     def __init__(self, port_name='/dev/ttyACM0', baudrate=57600, timeout=3):
@@ -58,6 +58,7 @@ class RobotController:
         self.motor_state_tracker = MotorStateTracker()
         self.port = serial.Serial(port=port_name, baudrate=baudrate, timeout=timeout)
         self.modes = {
+            's':self.scanner_mode,
             'n': self.notation_mode,
             'r': self.raw_mode,
             'i': self.inverse_kinematics_mode
@@ -70,28 +71,28 @@ class RobotController:
         response = self.port.read_until(expected=b'#')
         print(f"response:{response.decode('ascii')}")
 
+    def scanner_mode():
+        pass
+
     def notation_mode(self):
         while True:
             raw_notation = input("Input notation (or '=' to exit): ")
             if raw_notation == '=':
                 break
+            # elif raw_command == 'home':
+            #     raw_command = self.motor_state_tracker.home_command()
+            # elif raw_command == 'align':
+            #     raw_command = self.motor_state_tracker.cube_alignment_command()
+
             dataclasses = notation_to_clean_dataclasses(raw_notation.split())
             command_str = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
             self.send_command(command_str)
-
-    def raw_mode(self):
-        while True:
-            raw_command = input("Input command (or '=' to exit): ")
-            if raw_command == '=':
-                break
-            elif raw_command == 'home':
-                raw_command = self.motor_state_tracker.home_command()
-            self.send_command(raw_command)
 
     def inverse_kinematics_mode(self):
         while True:
             kinematics_input = input("Input kinematics (or '=' to exit): ")
             if kinematics_input == '=':
+
                 break
             elif kinematics_input == 'home':
                 command_str = self.motor_state_tracker.home_command()
@@ -99,6 +100,15 @@ class RobotController:
                 actions = string_to_action_command(kinematics_input)
                 command_str = self.motor_state_tracker.action_to_motor_command(actions)
             self.send_command(command_str)
+
+    def raw_mode(self):
+        while True:
+            print('WARNING: raw_mode does not track motor state, homing disabled')
+            raw_command = input("Input command (or '=' to exit): ")
+            if raw_command == '=':
+                break
+            self.send_command(raw_command)
+
 
     def run(self):
         """Main loop to select and run modes."""
