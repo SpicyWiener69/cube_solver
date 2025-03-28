@@ -1,7 +1,6 @@
 from icecream import ic
 from dataclasses import dataclass,field
-import math
-
+#import math
 
 
 @dataclass
@@ -13,7 +12,7 @@ class Dim3x3:
     #EFFECTOR D (DOWN)
     D_LOWER = 0
     D_HOME = 25
-    D_LAYER_TOP = 40
+    D_LAYER_TOP = 41
     D_LAYER_MID = 59
     D_LAYER_ALL = 80
 
@@ -87,20 +86,20 @@ def notations_to_modified_notations(dataclasses):
 
     move_revert_table = {
         'U':[],
-        'R':[NotationDataClass(name='x',direction=1,repetition = 1),NotationDataClass(name='y',direction=1,repetition = 1)],
-        'F':[NotationDataClass(name='x',direction=-1,repetition = 1)],
-        'D':[NotationDataClass(name='y',direction=-1,repetition = 1)],
-        'L':[NotationDataClass(name='x',direction=1,repetition = 1),NotationDataClass(name='y',direction=-1,repetition = 1)],
-        'B':[NotationDataClass(name='y',direction=-1,repetition = 1)]
+        'R':[NotationDataClass(name='x',direction = 1,repetition = 1),NotationDataClass(name='y',direction=1,repetition = 1)],
+        'F':[NotationDataClass(name='x',direction = -1,repetition = 1)],
+        'D':[NotationDataClass(name='y',direction = 1,repetition = 1)],
+        'L':[NotationDataClass(name='x',direction = 1,repetition = 1),NotationDataClass(name='y',direction=-1,repetition = 1)],
+        'B':[NotationDataClass(name='x',direction = 1,repetition = 1)]
     }
 
     for dataclass in dataclasses:
         setup = move_setup_table[dataclass.name]
         revert = move_revert_table[dataclass.name]
         if dataclass.name == 'D':
-            core_move = [NotationDataClass(name='u',direction=dataclass.direction,repetition=dataclass.repetition)]
+            core_move = [NotationDataClass(name='u',direction = dataclass.direction,repetition = dataclass.repetition)]
         else:
-            core_move = [NotationDataClass(name='U',direction=dataclass.direction,repetition=dataclass.repetition)]  
+            core_move = [NotationDataClass(name='U',direction = dataclass.direction,repetition = dataclass.repetition)]  
         
         modified_lst_inst = []
         modified_lst_inst.extend(setup)
@@ -189,46 +188,46 @@ class MotorStateTracker:
     def cube_alignment_command(self) -> str:
         homing_str  = self.home_command()
         alignment = [
-            {"operation":'D', "magnitude": Dim3x3.D_HOME},
+            {"operation":'D', "magnitude": Dim3x3.D_LOWER},
+            {"operation":'G', "magnitude": Dim3x3.G_HOME},
             {"operation":'W', "magnitude":500},
+            {"operation":'D', "magnitude": Dim3x3.D_HOME},
             {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
             {"operation":'W', "magnitude":500},
             {"operation":'C', "magnitude": Dim3x3.C_HOME},
             {"operation":'D', "magnitude": Dim3x3.D_LOWER},
             {"operation":'T', "magnitude": 90},
-             {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
+            {"operation":'W', "magnitude":1000},
+            {"operation":'D', "magnitude": Dim3x3.D_LAYER_ALL},
+            {"operation":'W', "magnitude":500},
             {"operation":'G', "magnitude": Dim3x3.G_GRIP},
             {"operation":'W', "magnitude":1000},
             {"operation":'G', "magnitude": Dim3x3.G_HOME},
-             {"operation":'D', "magnitude": Dim3x3.D_LOWER},
+            {"operation":'W', "magnitude":500},
+            {"operation":'D', "magnitude": Dim3x3.D_LOWER},
             {"operation":'T', "magnitude": -90}, 
             {"operation":'G', "magnitude": Dim3x3.G_HOME},
             {"operation":'C', "magnitude":Dim3x3.C_HOME},
             {"operation":'D', "magnitude": Dim3x3.D_HOME},
         ]
         motor_commands = self.action_to_motor_command(alignment)
+        #self.motor_state = self.HOME_STATE.copy()#?
         return homing_str + motor_commands
     
-    def home_command(self) -> str:#TODO
-        
-        diff_D = self.HOME_STATE['D'] - self.motor_state['D'] 
-        diff_C = self.HOME_STATE['C'] - self.motor_state['C'] 
-        diff_G = self.HOME_STATE['G'] - self.motor_state['G'] 
-        
-        home_commands = [
-        {"operation" :'D', "magnitude" : diff_D},
-        {"operation" :'C', "magnitude" : diff_C},
-        {"operation" :'G', "magnitude" : diff_G}
+    def home_command(self) -> str:
+        actions = [
+        {"operation" :'D', "magnitude" :self.HOME_STATE['D']},
+        {"operation" :'C', "magnitude" : self.HOME_STATE['C']},
+        {"operation" :'G', "magnitude" : self.HOME_STATE['G']}
         ]
-        motor_commands = self._gear_ratio_conversion(home_commands)
-        self.motor_state = self.HOME_STATE.copy()
+        motor_commands = self.action_to_motor_command(actions)
         
         if DEBUG:
             ic(motor_commands)
         
         return motor_commands
 
-    def dataclass_to_motor_command(self,dataclasses):
+    def dataclass_to_motor_command(self,dataclasses) -> str:
         abs = self._from_dataclass_to_abs(dataclasses)
         relative = self._abs_to_relative(abs)
         motor_commands = self._gear_ratio_conversion(relative)
@@ -239,7 +238,7 @@ class MotorStateTracker:
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
 
-    def _from_dataclass_to_abs(self,dataclasses):
+    def _from_dataclass_to_abs(self,dataclasses) ->list[dict[str,str]]:
         abs_states = []
 
         notation_to_commands = {
@@ -275,9 +274,9 @@ class MotorStateTracker:
                                 {"operation":'D', "magnitude": Dim3x3.D_LAYER_TOP},
                                 {"operation":'C', "magnitude": Dim3x3.C_CLAMP},
                                 {"operation":'G', "magnitude":Dim3x3.G_GRIP},
-                                {"operation":'W', "magnitude":500},
+                                {"operation":'W', "magnitude":200},
                                 {"operation":'T', "magnitude":(90* dir * rep)},
-                                {"operation":'W', "magnitude":500},
+                                {"operation":'W', "magnitude":200},
                                 {"operation":'G', "magnitude":Dim3x3.G_HOME},
                                 {"operation":'C', "magnitude": Dim3x3.C_HOME},
                                 {"operation":'D', "magnitude":0},

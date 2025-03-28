@@ -76,17 +76,19 @@ class RobotController:
 
     def notation_mode(self):
         while True:
-            raw_notation = input("Input notation (or '=' to exit): ")
-            if raw_notation == '=':
+            input_str = input("Input notation (or '=' to exit): ")
+            if input_str == '=':
                 break
-            # elif raw_command == 'home':
-            #     raw_command = self.motor_state_tracker.home_command()
-            # elif raw_command == 'align':
-            #     raw_command = self.motor_state_tracker.cube_alignment_command()
-
-            dataclasses = notation_to_clean_dataclasses(raw_notation.split())
-            command_str = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
-            self.send_command(command_str)
+            elif input_str == 'home':
+                command = self.motor_state_tracker.home_command()
+                self.send_command(command)
+            elif input_str == 'align':
+                command = self.motor_state_tracker.cube_alignment_command()
+                self.send_command(command)
+            else:
+                dataclasses = notation_to_clean_dataclasses(input_str.split())
+                command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
+                self.send_command(command)
 
     def inverse_kinematics_mode(self):
         while True:

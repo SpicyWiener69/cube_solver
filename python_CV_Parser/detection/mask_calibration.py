@@ -12,7 +12,6 @@ import math
 def calibrate_mask() -> None:
     camera = cv2.VideoCapture("https://10.42.0.99:8080/video")
     image = readFrame(camera)
-    #image = cv2.imread("rubiks-side-B.png",cv2.IMREAD_GRAYSCALE)
     top_left, bottom_right = fetch_mouse_coordinates(image)
     aoi_center_list = fetch_pattern_coordinates(top_left, bottom_right)
     ic(aoi_center_list)
@@ -35,13 +34,13 @@ def save_points_json(aoi_list) -> None:
     for index , corners in enumerate(aoi_list):
         top_left = corners[0]
         bottom_right = corners[1]
-        aoi_dict[f'{index+1}'] = f'top_left:{top_left} ,bottom_right:{bottom_right} '
+        aoi_dict[f'{index+1}'] = f'{top_left}, {bottom_right}'
     layer_count = int(math.sqrt(len(aoi_dict)))
 
     with open(f'aoi_json/aois{layer_count}.json', "w") as f:
         json.dump(aoi_dict, f)
 
-def center_square_to_corners(coordinate,side_len = 10) -> tuple[tuple]:
+def center_square_to_corners(coordinate,side_len = 25) -> tuple[tuple]:
     x,y = coordinate[0],coordinate[1]
     top_left = (x - side_len // 2, y - side_len // 2)
     bottom_right = (x + side_len // 2, y + side_len // 2)

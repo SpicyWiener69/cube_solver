@@ -1,7 +1,7 @@
 
-
 import subprocess
 import os
+
 
 def fetchSolution(cube_state):
     #change the cwd due to api path
@@ -15,6 +15,9 @@ def fetchSolution(cube_state):
     os.chdir(original_wd)
     return solution
 
+def resolve_color():
+    str = subprocess.run(['./rubiks-cube-solver.py', '--state', cube_state],capture_output=True)
 
-cube_state = 'DLRRFULLDUBFDURDBFBRBLFU'
-fetchSolution(cube_state)
+if __name__ == "__main__":
+    cube_state = 'DLRRFULLDUBFDURDBFBRBLFU'
+    fetchSolution(cube_state)
