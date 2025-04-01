@@ -9,17 +9,17 @@ import math
 
 # class mask_saver:
 #     def __init__():
-def calibrate_mask() -> None:
+def calibrate_mask(cubesize = 3) -> None:
     camera = cv2.VideoCapture("https://10.42.0.99:8080/video")
     image = readFrame(camera)
     top_left, bottom_right = fetch_mouse_coordinates(image)
-    aoi_center_list = fetch_pattern_coordinates(top_left, bottom_right)
+    aoi_center_list = fetch_pattern_coordinates(top_left, bottom_right, cubesize)
     ic(aoi_center_list)
     mask = np.zeros((image.shape), dtype = np.uint8)
     aoi_corners_list = []
     for coordinate in aoi_center_list:
         top_left, bottom_right = center_square_to_corners(coordinate)
-        aoi_corners_list.append((top_left,bottom_right))
+        aoi_corners_list.append((top_left, bottom_right))
         cv2.rectangle(mask, pt1 = top_left, pt2 = bottom_right, thickness= -1, color = 255)
         #cv2.circle(mask,coordinate,radius=10,color = (255,255,255),thickness=-1)
     save_points_json(aoi_corners_list)
@@ -31,7 +31,7 @@ def calibrate_mask() -> None:
 
 def save_points_json(aoi_list) -> None:
     aoi_dict = {}
-    for index , corners in enumerate(aoi_list):
+    for index, corners in enumerate(aoi_list):
         top_left = corners[0]
         bottom_right = corners[1]
         aoi_dict[f'{index+1}'] = f'{top_left}, {bottom_right}'
@@ -47,7 +47,7 @@ def center_square_to_corners(coordinate,side_len = 25) -> tuple[tuple]:
     #cv2.rectangle(mask,pt1 = top_left, pt2 = bottom_right, thickness= -1,color = 255)
     return top_left,bottom_right
 
-def fetch_pattern_coordinates(top_left,bottom_right,cubesize = 3) -> list[tuple]:
+def fetch_pattern_coordinates(top_left,bottom_right,cubesize) -> list[tuple]:
     coordinates = []
     x_step = (bottom_right[0] -  top_left[0]) // (cubesize - 1)
     y_step = (bottom_right[1] - top_left[1]) // (cubesize - 1)  

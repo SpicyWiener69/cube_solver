@@ -20,6 +20,7 @@ typedef struct Motor_config_T
     GPIO_TypeDef *GPIO;
     uint8_t dirPin;
     uint8_t stepPin;
+    int8_t motor_direction;
 
 } Motor_config_T;
 
@@ -54,7 +55,7 @@ typedef struct Motor_lst_T
 
 uint32_t ResetUsTimer(void);
 uint32_t GetUsTime(void);
-Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin);
+Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin, int8_t motor_direction);
 void initStepperGPIO(Motor_lst_T motor_lst);
 ArrayStruct_T generateTrapezoidProfile(Task_T task);
 void updateTaskProfilePtr(Task_T* task,ArrayStruct_T* profile);

@@ -46,11 +46,9 @@
 #             print(port.read_until(expected=b'#'))
 
 
-
-
-
 import serial
 from notation_movement_v2 import notation_to_clean_dataclasses, string_to_action_command, MotorStateTracker
+from detect import Detector
 
 class RobotController:
     def __init__(self, port_name='/dev/ttyACM0', baudrate=57600, timeout=3):
@@ -71,8 +69,10 @@ class RobotController:
         response = self.port.read_until(expected=b'#')
         print(f"response:{response.decode('ascii')}")
 
-    def scanner_mode():
-        pass
+    def scanner_mode(self):
+        cubesize  = int(input("Input cube_layer (or '=' to exit): "))
+        detector = Detector(cubelayer=cubesize)
+        #TODO: implement a function to turn the cube to scan. implement from notations conversion: x, y
 
     def notation_mode(self):
         while True:
@@ -115,7 +115,7 @@ class RobotController:
     def run(self):
         """Main loop to select and run modes."""
         while True:
-            picker = input("Mode selection: (n) Notation, (r) Raw motor, (i) Inverse kinematics: ")
+            picker = input("Mode selection:(s)Scanner (auto), (n) Notation, (r) Raw motor, (i) Inverse kinematics: ")
             mode_function = self.modes.get(picker)
             if mode_function:
                 mode_function()

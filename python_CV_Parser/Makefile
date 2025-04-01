@@ -1,8 +1,8 @@
 PREFIX=rubiks-cube-NxNxN-solver
 
 clean:
-	#rm -rf build dist venv rubikscubennnsolver.egg-info cache ida_search ida_search_via_graph my-pt-states.txt
-	rm -rf $(PREFIX)/build $(PREFIX)/dist $(PREFIX)/venv \
+	rm -rf build dist venv rubikscubennnsolver.egg-info cache ida_search ida_search_via_graph my-pt-states.txt
+	rm -rf $(PREFIX)/build $(PREFIX)/dist venv \
 	       $(PREFIX)/rubikscubennnsolver.egg-info $(PREFIX)/cache \
 	       $(PREFIX)/ida_search $(PREFIX)/ida_search_via_graph \
 	       $(PREFIX)/my-pt-states.txt
@@ -16,17 +16,13 @@ init: clean
 	    $(PREFIX)/rubikscubennnsolver/ida_search_777.c \
 	    $(PREFIX)/rubikscubennnsolver/ida_search_via_graph.c -lm
 	python3 -m venv venv
-	@./venv/bin/python3 -m pip install -U pip
-	@CRYPTOGRAPHY_DONT_BUILD_RUST=1 ./venv/bin/python3 -m pip install -r requirements.dev.txt
-	@CRYPTOGRAPHY_DONT_BUILD_RUST=1 ./venv/bin/python3 -m pip check
+#switch to solver library requirements and install them outside
+	(cd $(PREFIX) && ../venv/bin/python3 -m pip install -U pip)
+	(cd $(PREFIX) && CRYPTOGRAPHY_DONT_BUILD_RUST=1 ../venv/bin/python3 -m pip install -r requirements.dev.txt)
+	(cd $(PREFIX) && CRYPTOGRAPHY_DONT_BUILD_RUST=1 ../venv/bin/python3 -m pip check)
+#install native dependencies
+	venv/bin/python3 -m pip install -r requirements.txt
 
-format:
-	isort rubikscubennnsolver usr utils
-	@./venv/bin/python3 -m black --config=pyproject.toml .
-	@./venv/bin/python3 -m flake8 --config=.flake8
-
-wheel:
-	@./venv/bin/python3 setup.py bdist_wheel
 
 test:
 	$(PREFIX)/rubiks-cube-solver.py --state DLRRFULLDUBFDURDBFBRBLFU

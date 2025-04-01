@@ -35,13 +35,15 @@ static inline void resetPin(GPIO_TypeDef *GPIOx, uint32_t pin)
     GPIOx->BSRR = 1 << (16 + pin);
 }
 
-Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin)
+Motor_config_T initMotor(uint8_t id, GPIO_TypeDef *GPIO, uint16_t dirPin, uint16_t stepPin, int8_t motor_direction)
 {
     Motor_config_T motor = {
         .id = id,
         .GPIO = GPIO,
         .dirPin = dirPin,
-        .stepPin = stepPin};
+        .stepPin = stepPin,
+        .motor_direction = motor_direction,    
+    };
     return motor;
 }
 
@@ -115,13 +117,13 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task)
 }
 
 uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
-{
+{   
     // Set the motor direction based on the current task's direction.
-    if (taskPtr->direction == 1)
+    if (taskPtr->direction == motor.motor_direction)
     {
         setPin(motor.GPIO, motor.dirPin);
     }
-    else if (taskPtr->direction == -1)
+    else if (taskPtr->direction == -1 * motor.motor_direction)
     {
         resetPin(motor.GPIO, motor.dirPin);
     }

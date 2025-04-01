@@ -3,7 +3,8 @@ import json
 import numpy as np
 from icecream import ic
 import warnings
-
+import subprocess
+import mask_calibration
 
 class Detector:
     def __init__(self,cubelayer = 3, video_address = "https://10.42.0.99:8080/video"):
@@ -13,6 +14,9 @@ class Detector:
         self.detect_count = 0
         self.video_address = video_address
         self.camera = cv2.VideoCapture(self.video_address)
+
+    def calibrate_mask(self):
+        mask_calibration.calibrate_mask(self.cubelayer)
 
     def reset_detection(self):
         self.aoi_dict = self._json_to_dict()
@@ -45,7 +49,7 @@ class Detector:
         rgb_mean[0], rgb_mean[1], rgb_mean[2] = round(bgr_mean[2]), round(bgr_mean[1]), round(bgr_mean[0])
         return rgb_mean
     
-    def display_bboxes(self) -> None:  #untested
+    def display_bboxes(self) -> None:  
         while(True):
             ret, frame = self.camera.read()
             for _, bbox in self.aoi_dict.items():
@@ -73,7 +77,12 @@ class Detector:
         self.detect_count += 1
         #return self.rgb_dict
 
-
+    def resolve_color(self,rgb_dict) -> str: #TODO
+        str = subprocess.run(['./rubiks-cube-solver.py', '-j', rgb_dict],capture_output=True)
+        cubestate_str = str.stdout.decode('utf-8')
+        self.reset_detection()
+        return cubestate_str
+    
 if __name__ == "__main__":
     DEBUG = False
     detector = Detector(cubelayer=3)

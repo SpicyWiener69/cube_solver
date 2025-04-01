@@ -26,10 +26,10 @@ int main(void)
 	// servo = moveServoMotorRelative(servo,-20);
 	// servo = moveServoMotorRelative(servo,100);
 
-	Motor_config_T motorLR = initMotor('L', GPIOA, 6, 7);
-	Motor_config_T motorD = initMotor('D', GPIOB, 4, 5);
-	Motor_config_T motorT = initMotor('T', GPIOB, 14, 15);
-	Motor_config_T motorC = initMotor('C', GPIOB, 8, 9);
+	Motor_config_T motorLR = initMotor('L', GPIOA, 6, 7, 1);
+	Motor_config_T motorD = initMotor('D', GPIOB, 4, 5, 1);
+	Motor_config_T motorT = initMotor('T', GPIOB, 14, 15, -1);
+	Motor_config_T motorC = initMotor('C', GPIOB, 8, 9, 1);
 
 	Motor_lst_T motorList = {0};
 	motorList.Motor_config[0] = motorLR;
@@ -185,9 +185,9 @@ Task_T initTaskByMotorID(char motorID)
 	switch (motorID)
 	{
 	case 'T':
-		task.lowSpeedInterval = 1000;
+		task.lowSpeedInterval = 800;
 		task.highSpeedInterval = 500;
-		task.accel = 5;
+		task.accel = 4;
 		task.stepsPer360 = 200;
 		break;
 	case 'L':
@@ -197,8 +197,8 @@ Task_T initTaskByMotorID(char motorID)
 		task.stepsPer360 = 1600;
 		break;
 	case 'D':
-		task.lowSpeedInterval = 1000;
-		task.highSpeedInterval = 500;
+		task.lowSpeedInterval = 1200;
+		task.highSpeedInterval = 700;
 		task.accel = 5;
 		task.stepsPer360 = 200;
 		break;
