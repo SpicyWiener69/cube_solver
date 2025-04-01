@@ -64,11 +64,7 @@ class NotationDataClass:
     name:str = "default"
     direction:int = 1
     repetition:int = 1
-    #layerdepth:int #TODO
-
-    #printing:
-    def __str__(self):
-        return f"{self.name}{self.direction}{self.repetition})"
+    layerdepth:int = 1
     
 class NotationConvertor:
     pass
@@ -78,23 +74,52 @@ def verify_notations(notations):
     #raise error
     return notations
 
-def notations_to_dataclasses(notations): #->list[NotationDataClass]
+def notations_to_dataclasses(notations:str): #->list[NotationDataClass]
     dataclasses = []
     for notation in notations:
-        instance = NotationDataClass()
         length = len(notation)
-        instance.name = notation[0]  
-        if notation.endswith("'"):  #check for reversals
-            instance.direction = -1
-        else:
-            instance.direction = 1   
+        instance = NotationDataClass()
 
-        if '2' in notation:        #check for double moves 
-            instance.repetition = 2
+        #name detection
+        for char in notation:
+            if char.isupper():
+                instance.name = char
+                break
+
+        #layerdepth evaluation
+        if 'w' in notation:
+            if (notation[0].isnumeric()):
+                instance.layerdepth = notation[0]
+            else:
+                #special case for 4x4, for example, 2Lw2 is noted as Lw2 instead
+                instance.layerdepth = 2 
         else:
+            instance.layerdepth = 1
+
+        #direction and rep count
+        if notation.endswith('2'):
+            instance.direction = 1
+            instance.repetition = 2
+        elif notation.endswith("'"):
+            instance.direction = -1
+            instance.repetition = 1
+        else:
+            instance.direction = 1
             instance.repetition = 1
 
         dataclasses.append(instance)
+        # instance.name = notation[0]  
+        # if notation.endswith("'"):  #check for reversals
+        #     instance.direction = -1
+        # else:
+        #     instance.direction = 1   
+
+        # if '2' in notation:        #check for double moves 
+        #     instance.repetition = 2
+        # else:
+        #     instance.repetition = 1
+
+        # dataclasses.append(instance)
     
     if DEBUG:
         ic(dataclasses)
@@ -404,7 +429,7 @@ DEBUG = False
 if __name__ == "__main__":
     DEBUG = True
     convertor = MotorStateTracker()
-    notations = ['D']
+    notations = ["Fw'"]
     dataclasses = notation_to_clean_dataclasses(notations)
     commands = convertor.dataclass_to_motor_command(dataclasses)
     commands = convertor.home_command()
