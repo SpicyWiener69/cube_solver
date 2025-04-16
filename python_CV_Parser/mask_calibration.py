@@ -11,20 +11,27 @@ import math
 #     def __init__():
 def calibrate_mask(cubesize = 3) -> None:
     camera = cv2.VideoCapture("https://10.42.0.99:8080/video")
-    image = readFrame(camera)
-    top_left, bottom_right = fetch_mouse_coordinates(image)
+    _, rawframe = camera.read()
+    frame = resize_frame(rawframe)
+    # scale_percent = 50
+    # width = int(image.shape[1] * scale_percent / 100)
+    # height = int(image.shape[0] * scale_percent / 100)
+    # image = cv2.resize(image,(width, height))  
+    # image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+    top_left, bottom_right = fetch_mouse_coordinates(frame)
     aoi_center_list = fetch_pattern_coordinates(top_left, bottom_right, cubesize)
     ic(aoi_center_list)
-    mask = np.zeros((image.shape), dtype = np.uint8)
+    mask = np.zeros((frame.shape), dtype = np.uint8)
     aoi_corners_list = []
     for coordinate in aoi_center_list:
         top_left, bottom_right = center_square_to_corners(coordinate)
         aoi_corners_list.append((top_left, bottom_right))
         cv2.rectangle(mask, pt1 = top_left, pt2 = bottom_right, thickness= -1, color = 255)
-        #cv2.circle(mask,coordinate,radius=10,color = (255,255,255),thickness=-1)
     save_points_json(aoi_corners_list)
     ic(aoi_corners_list)
-    cv2.imshow('mask',mask)
+    #cv2.namedWindow('window', cv2.WINDOW_NORMAL)
+    #cv2.setWindowProperty('window', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN) 
+    cv2.imshow('window',mask)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -90,12 +97,24 @@ def fetch_mouse_coordinates(image) -> tuple[tuple]:
             break
     return top_left, bottom_right
  
-def readFrame(camera) -> np.array:
-    ret, frame = camera.read()
-    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    if ret:
-        return frame
-    return None
+
+def resize_frame(frame) -> np.array:
+    '''
+    custom resizeing for current computer display;
+    adjust values if needed
+    '''
+    #ret, frame = camera.read()
+    #if not isBGR:
+        #frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    
+    scale_percent = 50
+    width = int(frame.shape[1] * scale_percent / 100)
+    height = int(frame.shape[0] * scale_percent / 100)
+    frame = cv2.resize(frame,(width, height))  
+    frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+    #if ret:
+        #return frame
+    return frame
 
 if __name__ == '__main__':
     calibrate_mask()

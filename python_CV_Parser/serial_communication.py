@@ -47,13 +47,16 @@
 
 
 import serial
-from notation_movement_v2 import notation_to_clean_dataclasses, string_to_action_command, MotorStateTracker
+from motor_state_tracker import  MotorStateTracker, string_to_action_command
 from detect import Detector
+from notation_parser import NotationConvertor
 
 class RobotController:
     def __init__(self, port_name='/dev/ttyACM0', baudrate=57600, timeout=3):
         """Initialize the serial connection and mode selection."""
-        self.motor_state_tracker = MotorStateTracker()
+        self.cubesize = None
+        #self.motor_state_tracker = MotorStateTracker(cubesize = cubesize)
+        #self.notation_convertor = NotationConvertor(cubesize = cubesize)
         self.port = serial.Serial(port=port_name, baudrate=baudrate, timeout=timeout)
         self.modes = {
             's':self.scanner_mode,
@@ -72,7 +75,7 @@ class RobotController:
     def scanner_mode(self):
         cubesize  = int(input("Input cube_layer (or '=' to exit): "))
         detector = Detector(cubelayer=cubesize)
-        #TODO: implement a function to turn the cube to scan. implement from notations conversion: x, y
+        #TODO: implement a function to turn the cube to scan.
 
     def notation_mode(self):
         while True:
@@ -86,9 +89,12 @@ class RobotController:
                 command = self.motor_state_tracker.cube_alignment_command()
                 self.send_command(command)
             else:
-                dataclasses = notation_to_clean_dataclasses(input_str.split())
+                dataclasses = self.notation_convertor.to_dataclasses(input_str.split())
                 command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
                 self.send_command(command)
+        #reset after a session
+        command = self.motor_state_tracker.home_command()
+        self.send_command(command)
 
     def inverse_kinematics_mode(self):
         while True:
@@ -115,7 +121,10 @@ class RobotController:
     def run(self):
         """Main loop to select and run modes."""
         while True:
-            picker = input("Mode selection:(s)Scanner (auto), (n) Notation, (r) Raw motor, (i) Inverse kinematics: ")
+            self.cubesize  = int(input("Input cube_layer (or '=' to exit): "))
+            self.motor_state_tracker = MotorStateTracker(cubesize = self.cubesize)
+            self.notation_convertor = NotationConvertor(cubesize = self.cubesize)
+            picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics: ")
             mode_function = self.modes.get(picker)
             if mode_function:
                 mode_function()

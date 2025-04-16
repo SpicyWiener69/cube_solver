@@ -1,29 +1,56 @@
-import cv2
 import json
+import threading
+import time
+import warnings
+
+import cv2
 import numpy as np
 from icecream import ic
-import warnings
-import subprocess
-import mask_calibration
+
+from mask_calibration import resize_frame
+from rubikscolorresolver.solver import resolve_colors
+
 
 class Detector:
-    def __init__(self,cubelayer = 3, video_address = "https://10.42.0.99:8080/video"):
+    def __init__(self, cubelayer, debug = False, video_address = "https://10.42.0.99:8080/video"):
+        self.debug = debug
         self.cubelayer = cubelayer
         self.rgb_dict = {}
-        self.aoi_dict = self._json_to_dict()
+        self.aoi_dict = self.read_json()
         self.detect_count = 0
         self.video_address = video_address
-        self.camera = cv2.VideoCapture(self.video_address)
+        self.cap = cv2.VideoCapture(self.video_address)
+        self.ret, self.frame = self.cap.read()
+        self.stopped = False
+    
+    def start(self):
+        threading.Thread(target=self.update, args=()).start()
+        return self
 
-    def calibrate_mask(self):
-        mask_calibration.calibrate_mask(self.cubelayer)
+    def update(self):
+        while not self.stopped:
+            if not self.cap.isOpened():
+                self.stop()
+                return
+            self.ret, self.frame = self.cap.read()
+
+    def read_frame(self):
+        return self.ret, self.frame
+
+    def stop(self):
+        self.stopped = True
+        if self.cap.isOpened():
+            self.cap.release()
+
+    # def calibrate_mask(self):
+    #     mask_calibration.calibrate_mask(self.cubelayer)
 
     def reset_detection(self):
-        self.aoi_dict = self._json_to_dict()
+        self.aoi_dict = self.read_json()
         self.rgb_dict = {}
         self.detect_count = 0
 
-    def _json_to_dict(self)-> dict:
+    def read_json(self)-> dict:
         file_path = f"aoi_json/aois{self.cubelayer}.json" 
         aoi_dict = {}
         try:
@@ -37,8 +64,8 @@ class Detector:
             print(f"Error: The file '{file_path}' was not found")
 
     def _calculate_avg_bbox(self,bbox):
-        #camera = cv2.VideoCapture(self.video_address)
-        ret, frame = self.camera.read()
+        _, raw_frame = self.read_frame()
+        frame = resize_frame(raw_frame)
         roi = frame[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0], :] 
         if DEBUG:
             ic(roi)
@@ -51,41 +78,45 @@ class Detector:
     
     def display_bboxes(self) -> None:  
         while(True):
-            ret, frame = self.camera.read()
+            #ret, frame = self.camera.read()
+            _, raw_frame = self.read_frame()
+            frame = resize_frame(raw_frame)
             for _, bbox in self.aoi_dict.items():
                 cv2.rectangle(frame,bbox[0],bbox[1],color=(255,255,255),thickness=2)
             
             cv2.imshow('frame',frame)
-            if cv2.waitKey(1) == ord('q'):
+            if cv2.waitKey(1) == ord(' '):
                 break
-
+            #cv2.waitKey(0)
+        cv2.destroyWindow('frame')
         
     def detect_face(self):
         '''
-        required return format is specified here:
+        required return format for the rubiks color resolver is specified as:
         https://github.com/dwalton76/rubiks-color-resolver/blob/master/tests/test-data/2x2x2-random-01.txt
         '''
-        #rgb_dict = {}
         
         if self.detect_count > 5:
             warnings.warn("detect_face has been called more than 6 times!", UserWarning)
         for key, bbox in self.aoi_dict.items():
             rgb_mean = self._calculate_avg_bbox(bbox)
+            print(f'rgb mean list{rgb_mean}')
             tiles_each_face = self.cubelayer * self.cubelayer
             cube_tile_index = key + self.detect_count * tiles_each_face
             self.rgb_dict[cube_tile_index] = rgb_mean
         self.detect_count += 1
         #return self.rgb_dict
 
-    def resolve_color(self,rgb_dict) -> str: #TODO
-        str = subprocess.run(['./rubiks-cube-solver.py', '-j', rgb_dict],capture_output=True)
-        cubestate_str = str.stdout.decode('utf-8')
+    def solve_color(self) -> str: 
+        cubestate_str = resolve_colors([ "-j", "--rgb", str(self.rgb_dict)])
         self.reset_detection()
-        return cubestate_str
+        return cubestate_str 
     
+
 if __name__ == "__main__":
-    DEBUG = False
+    DEBUG = True
     detector = Detector(cubelayer=3)
+    detector.start()
     #aoi_dict = detector._json_to_dict()
     detector.display_bboxes()
     detector.detect_face()
@@ -105,7 +136,9 @@ if __name__ == "__main__":
     detector.display_bboxes()
     detector.detect_face()
     
-    print(detector.rgb_dict)
-    
-    detector.reset_detection()
+    ic(detector.rgb_dict)
+    cubestate = detector.solve_color()
+    ic(cubestate)
+    detector.stop()
+    # detector.reset_detection()
 
