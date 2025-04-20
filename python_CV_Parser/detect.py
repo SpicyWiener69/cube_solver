@@ -12,29 +12,30 @@ from rubikscolorresolver.solver import resolve_colors
 
 
 class Detector:
-    def __init__(self, cubelayer, debug = False, video_address = "https://10.42.0.99:8080/video"):
+    def __init__(self, cubesize, debug = False, video_address = "https://10.42.0.99:8080/video"):
         self.debug = debug
-        self.cubelayer = cubelayer
+        self.cubelayer = cubesize
         self.rgb_dict = {}
-        self.aoi_dict = self.read_json()
+        self.aoi_dict = self._read_json()
         self.detect_count = 0
         self.video_address = video_address
         self.cap = cv2.VideoCapture(self.video_address)
         self.ret, self.frame = self.cap.read()
         self.stopped = False
-    
+
     def start(self):
-        threading.Thread(target=self.update, args=()).start()
+        threading.Thread(target=self._update, args=()).start()
+        time.sleep(1)
         return self
 
-    def update(self):
+    def _update(self):
         while not self.stopped:
             if not self.cap.isOpened():
                 self.stop()
                 return
             self.ret, self.frame = self.cap.read()
 
-    def read_frame(self):
+    def _read_frame(self):
         return self.ret, self.frame
 
     def stop(self):
@@ -46,11 +47,11 @@ class Detector:
     #     mask_calibration.calibrate_mask(self.cubelayer)
 
     def reset_detection(self):
-        self.aoi_dict = self.read_json()
+        self.aoi_dict = self._read_json()
         self.rgb_dict = {}
         self.detect_count = 0
 
-    def read_json(self)-> dict:
+    def _read_json(self)-> dict:
         file_path = f"aoi_json/aois{self.cubelayer}.json" 
         aoi_dict = {}
         try:
@@ -64,11 +65,12 @@ class Detector:
             print(f"Error: The file '{file_path}' was not found")
 
     def _calculate_avg_bbox(self,bbox):
-        _, raw_frame = self.read_frame()
+        _, raw_frame = self._read_frame()
         frame = resize_frame(raw_frame)
         roi = frame[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0], :] 
-        if DEBUG:
+        if self.debug:
             ic(roi)
+            
             #convert from BGRA mean to rgb
         bgra_mean = cv2.mean(roi)
         bgr_mean = list(bgra_mean[0:3])
@@ -77,17 +79,17 @@ class Detector:
         return rgb_mean
     
     def display_bboxes(self) -> None:  
-        while(True):
-            #ret, frame = self.camera.read()
-            _, raw_frame = self.read_frame()
-            frame = resize_frame(raw_frame)
-            for _, bbox in self.aoi_dict.items():
-                cv2.rectangle(frame,bbox[0],bbox[1],color=(255,255,255),thickness=2)
-            
-            cv2.imshow('frame',frame)
-            if cv2.waitKey(1) == ord(' '):
-                break
-            #cv2.waitKey(0)
+        #while(True):
+
+        _, raw_frame = self._read_frame()
+        frame = resize_frame(raw_frame)
+        for _, bbox in self.aoi_dict.items():
+            cv2.rectangle(frame,bbox[0],bbox[1],color=(255,255,255),thickness=2)
+        
+        cv2.imshow('frame',frame)
+            # if cv2.waitKey(1) == ord(' '):
+            #     break
+        cv2.waitKey(1000)
         cv2.destroyWindow('frame')
         
     def detect_face(self):
@@ -100,7 +102,8 @@ class Detector:
             warnings.warn("detect_face has been called more than 6 times!", UserWarning)
         for key, bbox in self.aoi_dict.items():
             rgb_mean = self._calculate_avg_bbox(bbox)
-            print(f'rgb mean list{rgb_mean}')
+            if self.debug:
+                print(f'rgb mean list{rgb_mean}')
             tiles_each_face = self.cubelayer * self.cubelayer
             cube_tile_index = key + self.detect_count * tiles_each_face
             self.rgb_dict[cube_tile_index] = rgb_mean
@@ -114,8 +117,7 @@ class Detector:
     
 
 if __name__ == "__main__":
-    DEBUG = True
-    detector = Detector(cubelayer=3)
+    detector = Detector(cubesize = 3, debug = True)
     detector.start()
     #aoi_dict = detector._json_to_dict()
     detector.display_bboxes()
@@ -140,5 +142,6 @@ if __name__ == "__main__":
     cubestate = detector.solve_color()
     ic(cubestate)
     detector.stop()
+    print("ffadfasdf")
     # detector.reset_detection()
 

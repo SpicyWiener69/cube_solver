@@ -80,12 +80,12 @@ class NotationConvertor:
         #TODO:test
         valid_dict = {
             3: [
-                "x", "x'", "y",  "y'",
+                "x", "x2", "x'", "y", "y2", "y'",
                 "U", "U'", "U2", "L", "L'", "L2", "F", "F'", "F2",
                 "R", "R'", "R2", "B", "B'", "B2", "D", "D'", "D2"
             ],
             4: [
-                "x", "x'", "y",  "y'",
+                "x","x2", "x'", "y", "y2", "y'",
                 "U", "U'", "U2", "Uw", "Uw'", "Uw2", "L", "L'", "L2", "Lw", "Lw'", "Lw2",
                 "F", "F'", "F2", "Fw", "Fw'", "Fw2", "R", "R'", "R2", "Rw", "Rw'", "Rw2",
                 "B", "B'", "B2", "Bw", "Bw'", "Bw2", "D", "D'", "D2", "Dw", "Dw'", "Dw2"
@@ -94,7 +94,8 @@ class NotationConvertor:
         valid_list = valid_dict[self.cubesize]
         for notation in notations:
             if notation not in valid_list:
-                raise NotationError(f"notation not valid for cube size: {self.cubesize}")
+                
+                raise NotationError(f"{notation} notation not valid for cube size: {self.cubesize}")
         return notations
 
     def _notations_to_dataclasses(self,notations:list): #->list[NotationDataClass]
@@ -217,7 +218,7 @@ class NotationConvertor:
     #     dataclasses = notations_to_dataclasses(notations)
     #     modified_dataclasses = notations_to_modified_notations(dataclasses)
     #     cleaned_dataclasses = remove_repetitions(modified_dataclasses)   
-    def to_dataclasses(self,notations):
+    def to_dataclasses(self,notations:list):
         steps = [
                 self._verify_notations,\
                 self._notations_to_dataclasses, \

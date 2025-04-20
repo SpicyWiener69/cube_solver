@@ -232,13 +232,14 @@ def string_to_action_command(user_input_str) ->list[dict[str,int]]:
 class MotorStateTracker:
     def __init__(self, cubesize = 3, debug = False):
         #all linear magnitudes unit in mm
+        self.Dim = DIM_CLASSES[cubesize]
         self.HOME_STATE = {
          'D':0,   
          'C':70,
          'G':65
         }
         self.motor_state = self.HOME_STATE.copy()
-        self.Dim = DIM_CLASSES[cubesize]
+        
         self.debug = debug
     def cube_alignment_command(self) -> str:
         homing_str  = self.home_command()
@@ -389,7 +390,7 @@ class MotorStateTracker:
             'T':9.875,
             'C':(360/(40)) / 2,  # division of 2 for double the magnitude of C motor pulley
             'D':360/(63),
-            'G':(-360/46.3) / 2,  #division of 2 ,negative for servo motor direction adjustment
+            'G':(-360/50) / 2,  #division of 2 ,negative for servo motor direction adjustment //46.3 prev
         }
         for relative_command in relative_commands:
         #if relative_command["operation"] != 'W':

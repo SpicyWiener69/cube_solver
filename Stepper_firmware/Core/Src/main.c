@@ -48,7 +48,7 @@ int main(void)
 		{
 		case RECEIVE:
 			commands = recieve_bytes_until('#');
-			transmit_command(commands);
+			//transmit_command(commands);
 			// task_lst = parse_string_to_tasks(commands);
 			// if (!task_lst.parse_success)
 			// {
