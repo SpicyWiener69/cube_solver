@@ -1,7 +1,7 @@
 
 class Dim3x3:
 
-    SIDE_LEN = 53
+    SIDE_LEN = 55
     #SLICE_LEN = SIDE_LEN/3
 
     #EFFECTOR D (DOWN)
@@ -18,12 +18,12 @@ class Dim3x3:
     #EFFECTOR C(CLAMPING)
     C_HOME_OFFSET = 10
     C_HOME =SIDE_LEN + C_HOME_OFFSET
-    C_CLAMP =SIDE_LEN - 3
+    C_CLAMP =SIDE_LEN - 2
     
     #EFFECTOR G (GRIPPER)
-    G_OFFSET = 25
+    G_OFFSET = 13
     G_HOME = SIDE_LEN + G_OFFSET
-    G_GRIP = SIDE_LEN + 8
+    G_GRIP = SIDE_LEN - 1
 
 #@dataclass
 class Dim2x2:

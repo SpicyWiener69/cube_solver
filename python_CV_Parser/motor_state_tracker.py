@@ -328,11 +328,11 @@ class MotorStateTracker:
             'U':lambda dir,rep: [
                                 {"operation":'G', "magnitude":self.Dim.G_HOME},
                                 {"operation":'C', "magnitude": self.Dim.C_HOME},    
-                                {"operation":'W', "magnitude":200},
+                                {"operation":'W', "magnitude":300},
                                 {"operation":'D', "magnitude": self.Dim.D_LAYER_TOP},
                                 {"operation":'C', "magnitude": self.Dim.C_CLAMP},
                                 {"operation":'G', "magnitude":self.Dim.G_GRIP},
-                                {"operation":'W', "magnitude":200},
+                                {"operation":'W', "magnitude":300},
                                 {"operation":'T', "magnitude":(90* dir * rep)},
                                 {"operation":'W', "magnitude":200},
                                 {"operation":'G', "magnitude":self.Dim.G_HOME},
@@ -366,37 +366,48 @@ class MotorStateTracker:
         return abs_states
 
     def _abs_to_relative(self,operation_abs_commands): #->list[]
-        relative_commands = []
+        commands = []
         for command in operation_abs_commands:
             #only linear operations need abs->relative conversions 
-            if command["operation"] in ['D','C','G']: 
+            if command["operation"] in ['D','C']:  
                 relative = command["magnitude"]- self.motor_state[command["operation"]]   
                 #update motor_state
                 self.motor_state[command["operation"]] = command["magnitude"]              
                 command["magnitude"] = relative
                 #command.isrelative = True
-            relative_commands.append(command)
+            commands.append(command)
         if self.debug:
-            ic(relative_commands)
-        return relative_commands
+            ic(commands)
+        return commands
         
 
-    def _gear_ratio_conversion(self,relative_commands):
+    def _gear_ratio_conversion(self, relative_commands: list) -> str:
         motor_commands = []
+        
+        # ratios = { 
+        #     'W':1,
+        #     'L':1,
+        #     'T':9.875,
+        #     'C':(360/(40)) / 2,  # division of 2 for double the magnitude of C motor pulley
+        #     'D':360/(63),
+        #     'G': lamba 
+        #     #(-360/46.3) / 2,  #division of 2 ,negative for servo motor direction adjustment //46.3 prev
+        # }
         #converted unit: deg
         ratios = { 
-            'W':1,
-            'L':1,
-            'T':9.875,
-            'C':(360/(40)) / 2,  # division of 2 for double the magnitude of C motor pulley
-            'D':360/(63),
-            'G':(-360/50) / 2,  #division of 2 ,negative for servo motor direction adjustment //46.3 prev
+        'W': lambda value: value * 1,
+        'L': lambda value: value * 1,
+        'T': lambda value: value * 9.875,
+        'C': lambda value: value * ((360 / 40) / 2),  # double pulley magnitude
+        'D': lambda value: value * (360 / 63),
+        'G': lambda value: value * -3.75 + 311.25  # linear transformation for servo
         }
         for relative_command in relative_commands:
-        #if relative_command["operation"] != 'W':
-            ratio = ratios[relative_command["operation"]]
             motor = relative_command["operation"]
-            deg = ratio * relative_command["magnitude"]
+            magnitude = relative_command["magnitude"]
+            if motor == 'G':
+                print(f'G in mm:{magnitude}')
+            deg = ratios[motor](magnitude)
             deg_rounded = round(deg)
             motor_commands.append(f"{motor}:{deg_rounded}")
         ret = "; ".join(motor_commands)
@@ -406,31 +417,6 @@ class MotorStateTracker:
         return ret
 
 
-
-
-
-
-# def usr_abs_to_motor_commands(user_input_str):
-#     dataclasses = string_to_dataclasses(user_input_str) 
-#     relative_commands = convertor.abs_to_relative(dataclasses)
-#     motor_commands = convertor.gear_ratio_conversion(relative_commands)
-#     return motor_commands
-
-
-
-# def notation_to_motor_commands(notations):
-#     dataclasses = notations_to_dataclasses(notations)
-#     modified_dataclasses = notations_to_modified_notations(dataclasses)
-#     cleaned_dataclasses = remove_repetitions(modified_dataclasses)
-#     operation_abs_commands = convertor.from_dataclass_to_abs(cleaned_dataclasses)
-#     relative_commands = convertor.abs_to_relative(operation_abs_commands)
-#     motor_commands = convertor.gear_ratio_conversion(relative_commands)
-#     return motor_commands
-
-
-#DEBUG = False
-# convertor = operationConverter()
-
 if __name__ == "__main__":
     
     cubesize = 3
@@ -439,4 +425,5 @@ if __name__ == "__main__":
     notations = ["F"]
     dataclasses = notation_converter.to_dataclasses(notations)
     commands = state_tracker.dataclass_to_motor_command(dataclasses)
+    print('________________________')
     commands = state_tracker.home_command()

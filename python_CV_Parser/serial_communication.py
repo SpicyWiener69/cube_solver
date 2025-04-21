@@ -87,7 +87,7 @@ class RobotController:
     def _scan_six_sides(self) -> str:
         moveset = [['y'],['y'],['y'],["y", "x'"],["x2"]]
         print("starting stream...")
-        detector = Detector(cubesize=self.cubesize)
+        detector = Detector(cubesize=self.cubesize, debug = True)
         #align cube before detection
         command = self.motor_state_tracker.cube_alignment_command()
         self.send_command(command)
