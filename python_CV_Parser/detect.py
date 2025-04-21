@@ -79,7 +79,7 @@ class Detector:
         # rgb_mean[0], rgb_mean[1], rgb_mean[2] = round(bgr_mean[2]), round(bgr_mean[1]), round(bgr_mean[0])
         return rgb_mean
     
-    def _rgb2bgr(rgb: list, rounding=False) -> list:
+    def _rgb2bgr(self,rgb: list, rounding=False) -> list:
         bgr = [0] * 3
         if rounding:
             bgr[0], bgr[1], bgr[2] = round(rgb[2]), round(rgb[1]), round(rgb[0])
@@ -87,7 +87,7 @@ class Detector:
             bgr[0], bgr[1], bgr[2] = rgb[2], rgb[1], rgb[0]
         return bgr
 
-    def _bgr2rgb(bgr: list, rounding: bool = False) -> list:
+    def _bgr2rgb(self,bgr: list, rounding=False) -> list:
 
         rgb = [0] * 3
         if rounding:

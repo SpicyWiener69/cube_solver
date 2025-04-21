@@ -98,16 +98,11 @@ def fetch_mouse_coordinates(image) -> tuple[tuple]:
     return top_left, bottom_right
  
 
-def resize_frame(frame) -> np.array:
+def resize_frame(frame,scale_percent = 50) -> np.array:
     '''
     custom resizeing for current computer display;
     adjust values if needed
     '''
-    #ret, frame = camera.read()
-    #if not isBGR:
-        #frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    
-    scale_percent = 50
     width = int(frame.shape[1] * scale_percent / 100)
     height = int(frame.shape[0] * scale_percent / 100)
     frame = cv2.resize(frame,(width, height))  

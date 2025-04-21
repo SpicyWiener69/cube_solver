@@ -18,10 +18,20 @@ def fetch_solution(cube_state):
 if __name__ == "__main__":
     #dummy cases for testing
 
-    cube_state = 'DLRRFULLDUBFDURDBFBRBLFU'
-    #fetch_solution(cube_state)
+    # cube_state = 'DLRRFULLDUBFDURDBFBRBLFU'
+    # fetch_solution(cube_state)
+
+    # cube_state = 'RRBBUFBFBRLRRRFRDDURUBFBBRFLUDUDFLLFFLLLLDFBDDDUUBDLUU'
+    # fetch_solution(cube_state)
+    
+    cube_state = 'UUUUUUUUURRRRLRRRRFFFFBFFFFDDDDDDDDDLLLLRLLLLBBBBFBBBB'
+    fetch_solution(cube_state)
+
+
 
     cube_state = 'BRBLLLBRDLBBDDRRFUDFUDUDFUDDDRURBBBUUDRLFRDLLFBRFLRFLFFFBRULDRUBUBBLDBFRDLLUBUDDULFLRRFLFUBFUFUR'
-    #fetch_solution(cube_state)
+    fetch_solution(cube_state)
+
+    
 
     

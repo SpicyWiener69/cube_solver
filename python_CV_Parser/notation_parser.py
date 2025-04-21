@@ -1,6 +1,6 @@
 from icecream import ic
 from dataclasses import dataclass
-from dimension_constants import DIM_CLASSES
+from constants import DIM_CLASSES
 
 @dataclass
 class NotationDataClass:

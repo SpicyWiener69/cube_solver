@@ -1,5 +1,5 @@
 from icecream import ic
-from dimension_constants import DIM_CLASSES
+from constants import DIM_CLASSES
 from notation_parser import NotationDataClass, NotationConvertor
 
 def string_to_action_command(user_input_str) ->list[dict[str,int]]:

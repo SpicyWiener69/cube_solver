@@ -54,3 +54,5 @@ class Dim2x2:
 
 
 DIM_CLASSES = {2: Dim2x2, 3: Dim3x3}
+
+VIDEO_ADDRESS = "https://10.42.0.99:8080/video"
