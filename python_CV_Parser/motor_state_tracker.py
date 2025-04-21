@@ -1,205 +1,6 @@
 from icecream import ic
 from dimension_constants import DIM_CLASSES
 from notation_parser import NotationDataClass, NotationConvertor
-#import math
-
-
-# @dataclass
-# class Dim3x3:
-
-#     SIDE_LEN = 53
-#     #SLICE_LEN = SIDE_LEN/3
-
-#     #EFFECTOR D (DOWN)
-#     D_LOWER = 0
-#     D_HOME = 25
-#     D_LAYER_TOP = 41
-#     D_LAYER_MID = 59
-#     D_LAYER_ALL = 80
-
-#     #D_LAYER_TOP =D_HOME +SLICE_LEN * 1
-#     #D_LAYER_MID =D_HOME +SLICE_LEN * 2        
-#     #D_LAYER_ALL =D_HOME +SLICE_LEN * 3
-
-#     #EFFECTOR C(CLAMPING)
-#     C_HOME_OFFSET = 10
-#     C_HOME =SIDE_LEN + C_HOME_OFFSET
-#     C_CLAMP =SIDE_LEN
-    
-#     #EFFECTOR G (GRIPPER)
-#     G_OFFSET = 25
-#     G_HOME = SIDE_LEN + G_OFFSET
-#     G_GRIP = SIDE_LEN + 8
-
-# #@dataclass
-# class Dim2x2:
-
-#     SIDE_LEN = 53
-#     #SLICE_LEN = SIDE_LEN/3
-
-#     #EFFECTOR D (DOWN)
-#     D_LOWER = 0
-#     D_HOME = 25
-#     D_LAYER_TOP = 41
-#     D_LAYER_MID = 59
-#     D_LAYER_ALL = 80
-
-#     #D_LAYER_TOP =D_HOME +SLICE_LEN * 1
-#     #D_LAYER_MID =D_HOME +SLICE_LEN * 2        
-#     #D_LAYER_ALL =D_HOME +SLICE_LEN * 3
-
-#     #EFFECTOR C(CLAMPING)
-#     C_HOME_OFFSET = 10
-#     C_HOME =SIDE_LEN + C_HOME_OFFSET
-#     C_CLAMP =SIDE_LEN
-    
-#     #EFFECTOR G (GRIPPER)
-#     G_OFFSET = 25
-#     G_HOME = SIDE_LEN + G_OFFSET
-#     G_GRIP = SIDE_LEN + 8
-
-
-# @dataclass
-# class NotationDataClass:
-#     #default values
-#     name:str = "default"
-#     direction:int = 1
-#     repetition:int = 1
-#     layerdepth:int = 1
-    
-# class NotationConvertor:
-#     pass
-    
-# def verify_notations(notations):
-#     ending = ["'" , "2"]
-#     #raise error
-#     return notations
-
-# def notations_to_dataclasses(notations:str): #->list[NotationDataClass]
-#     dataclasses = []
-#     for notation in notations:
-#         length = len(notation)
-#         instance = NotationDataClass()
-
-#         #name detection
-#         for char in notation:
-#             if char.isupper():
-#                 instance.name = char
-#                 break
-
-#         #layerdepth evaluation
-#         if 'w' in notation:
-#             if (notation[0].isnumeric()):
-#                 instance.layerdepth = notation[0]
-#             else:
-#                 #special case for 4x4, for example, 2Lw2 is noted as Lw2 instead
-#                 instance.layerdepth = 2 
-#         else:
-#             instance.layerdepth = 1
-
-#         #direction and rep count
-#         if notation.endswith('2'):
-#             instance.direction = 1
-#             instance.repetition = 2
-#         elif notation.endswith("'"):
-#             instance.direction = -1
-#             instance.repetition = 1
-#         else:
-#             instance.direction = 1
-#             instance.repetition = 1
-
-#         dataclasses.append(instance)
-#         # instance.name = notation[0]  
-#         # if notation.endswith("'"):  #check for reversals
-#         #     instance.direction = -1
-#         # else:
-#         #     instance.direction = 1   
-
-#         # if '2' in notation:        #check for double moves 
-#         #     instance.repetition = 2
-#         # else:
-#         #     instance.repetition = 1
-
-#         # dataclasses.append(instance)
-    
-#     if DEBUG:
-#         ic(dataclasses)
-#     return dataclasses
-
-# def notations_to_modified_notations(dataclasses):
-#     modified_dataclasses = []
-#     move_setup_table = {
-#         'U':[],
-#         'R':[NotationDataClass(name='y',direction=-1,repetition = 1),NotationDataClass(name='x',direction=-1,repetition = 1)],
-#         'F':[NotationDataClass(name='x',direction=1,repetition = 1)],
-#         'D':[],
-#         'L':[NotationDataClass(name='y',direction=1,repetition = 1),NotationDataClass(name='x',direction=-1,repetition = 1)],
-#         'B':[NotationDataClass(name='x',direction=-1,repetition = 1)]
-        
-#     }
-
-#     move_revert_table = {
-#         'U':[],
-#         'R':[NotationDataClass(name='x',direction = 1,repetition = 1),NotationDataClass(name='y',direction=1,repetition = 1)],
-#         'F':[NotationDataClass(name='x',direction = -1,repetition = 1)],
-#         'D':[NotationDataClass(name='y',direction = 1,repetition = 1)],
-#         'L':[NotationDataClass(name='x',direction = 1,repetition = 1),NotationDataClass(name='y',direction=-1,repetition = 1)],
-#         'B':[NotationDataClass(name='x',direction = 1,repetition = 1)]
-#     }
-
-#     for dataclass in dataclasses:
-#         setup = move_setup_table[dataclass.name]
-#         revert = move_revert_table[dataclass.name]
-#         if dataclass.name == 'D':
-#             core_move = [NotationDataClass(name='u',direction = dataclass.direction,repetition = dataclass.repetition)]
-#         else:
-#             core_move = [NotationDataClass(name='U',direction = dataclass.direction,repetition = dataclass.repetition)]  
-        
-#         modified_lst_inst = []
-#         modified_lst_inst.extend(setup)
-#         modified_lst_inst.extend(core_move)
-#         modified_lst_inst.extend(revert)
-#         modified_dataclasses.extend(modified_lst_inst)
-#     if DEBUG:
-#         ic(modified_dataclasses)
-#     return modified_dataclasses
-
-
-#     #fetch two data from a sliding window, compare and remove extras: U <-> U', etc    
-# def remove_repetitions(modified_dataclasses):    #->list[NotationDataClass]
-#     cleaned_dataclasses = []
-#     i = 0
-#     if len(modified_dataclasses) <= 1:
-#         cleaned_dataclasses.extend(modified_dataclasses)
-#     else:
-#         while i< len(modified_dataclasses) - 1:
-#             data1 = modified_dataclasses[i]
-#             data2 = modified_dataclasses[i+1]
-#             if (data1.name == data2.name) and (data1.direction == data2.direction*-1):
-#                 i+=2
-#             else:
-#                 cleaned_dataclasses.append(data1)
-#                 i+=1
-#             if i == len(modified_dataclasses) -1:
-#                 cleaned_dataclasses.append(modified_dataclasses[i])
-#                 break
-
-        
-#     if DEBUG:
-#         ic(cleaned_dataclasses)
-#     return cleaned_dataclasses
-
-# #     dataclasses = notations_to_dataclasses(notations)
-# #     modified_dataclasses = notations_to_modified_notations(dataclasses)
-# #     cleaned_dataclasses = remove_repetitions(modified_dataclasses)   
-# def notation_to_clean_dataclasses(notations):
-#     steps = [verify_notations,notations_to_dataclasses,notations_to_modified_notations,remove_repetitions]
-#     data = notations
-#     for step in steps:
-#         data = step(data)
-#     if DEBUG:
-#         ic(data)
-#     return data
 
 def string_to_action_command(user_input_str) ->list[dict[str,int]]:
     dataclasses_list = []
@@ -227,10 +28,8 @@ def string_to_action_command(user_input_str) ->list[dict[str,int]]:
     return dataclasses_list
 
 
-
-
 class MotorStateTracker:
-    def __init__(self, cubesize = 3, debug = False):
+    def __init__(self, cubesize=3, debug=False):
         #all linear magnitudes unit in mm
         self.Dim = DIM_CLASSES[cubesize]
         self.HOME_STATE = {
@@ -239,32 +38,31 @@ class MotorStateTracker:
          'G':65
         }
         self.motor_state = self.HOME_STATE.copy()
-        
         self.debug = debug
     def cube_alignment_command(self) -> str:
-        homing_str  = self.home_command()
+        homing_str = self.home_command()
         alignment = [
-            {"operation":'D', "magnitude": self.Dim.D_LOWER},
-            {"operation":'G', "magnitude": self.Dim.G_HOME},
-            {"operation":'W', "magnitude":500},
-            {"operation":'D', "magnitude": self.Dim.D_HOME},
-            {"operation":'C', "magnitude": self.Dim.C_CLAMP},
-            {"operation":'W', "magnitude":500},
-            {"operation":'C', "magnitude": self.Dim.C_HOME},
-            {"operation":'D', "magnitude": self.Dim.D_LOWER},
-            {"operation":'T', "magnitude": 90},
-            {"operation":'W', "magnitude":1000},
-            {"operation":'D', "magnitude": self.Dim.D_LAYER_ALL},
-            {"operation":'W', "magnitude":500},
-            {"operation":'G', "magnitude": self.Dim.G_GRIP},
-            {"operation":'W', "magnitude":1000},
-            {"operation":'G', "magnitude": self.Dim.G_HOME},
-            {"operation":'W', "magnitude":500},
-            {"operation":'D', "magnitude": self.Dim.D_LOWER},
-            {"operation":'T', "magnitude": -90}, 
-            {"operation":'G', "magnitude": self.Dim.G_HOME},
-            {"operation":'C', "magnitude":self.Dim.C_HOME},
-            {"operation":'D', "magnitude": self.Dim.D_HOME},
+            {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+            {"operation": 'G', "magnitude": self.Dim.G_HOME},
+            {"operation": 'W', "magnitude": 500},
+            {"operation": 'D', "magnitude": self.Dim.D_HOME},
+            {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+            {"operation": 'W', "magnitude": 500},
+            {"operation": 'C', "magnitude": self.Dim.C_HOME},
+            {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+            {"operation": 'T', "magnitude": 90},
+            {"operation": 'W', "magnitude": 1000},
+            {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+            {"operation": 'W', "magnitude": 500},
+            {"operation": 'G', "magnitude": self.Dim.G_GRIP},
+            {"operation": 'W', "magnitude": 1000},
+            {"operation": 'G', "magnitude": self.Dim.G_HOME},
+            {"operation": 'W', "magnitude": 500},
+            {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+            {"operation": 'T', "magnitude": -90}, 
+            {"operation": 'G', "magnitude": self.Dim.G_HOME},
+            {"operation": 'C', "magnitude": self.Dim.C_HOME},
+            {"operation": 'D', "magnitude": self.Dim.D_HOME},
         ]
         motor_commands = self.action_to_motor_command(alignment)
         #self.motor_state = self.HOME_STATE.copy()#?
@@ -272,9 +70,9 @@ class MotorStateTracker:
     
     def home_command(self) -> str:
         actions = [
-        {"operation" :'D', "magnitude" :self.HOME_STATE['D']},
-        {"operation" :'C', "magnitude" : self.HOME_STATE['C']},
-        {"operation" :'G', "magnitude" : self.HOME_STATE['G']}
+            {"operation": 'D', "magnitude": self.HOME_STATE['D']},
+            {"operation": 'C', "magnitude": self.HOME_STATE['C']},
+            {"operation": 'G', "magnitude": self.HOME_STATE['G']}
         ]
         motor_commands = self.action_to_motor_command(actions)
         
@@ -283,79 +81,79 @@ class MotorStateTracker:
         
         return motor_commands
 
-    def dataclass_to_motor_command(self,dataclasses) -> str:
+    def dataclass_to_motor_command(self, dataclasses) -> str:
         abs = self._from_dataclass_to_abs(dataclasses)
         relative = self._abs_to_relative(abs)
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
     
-    def action_to_motor_command(self,actions):
+    def action_to_motor_command(self, actions):
         relative = self._abs_to_relative(actions)
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
 
-    def _from_dataclass_to_abs(self,dataclasses) ->list[dict[str,str]]:
+    def _from_dataclass_to_abs(self, dataclasses) ->list[dict[str,str]]:
         abs_states = []
 
         notation_to_commands = {
-            'x':lambda dir,rep: [
-                                {"operation":'D', "magnitude": self.Dim.D_HOME},
-                                {"operation":'C', "magnitude": self.Dim.C_CLAMP},
-                                {"operation":'W', "magnitude":500},
-                                {"operation":'D', "magnitude": 0},
-                                {"operation":'L', "magnitude": (90 * dir * rep)},
-                                {"operation":'D', "magnitude": self.Dim.D_HOME},
-                                {"operation":'C', "magnitude":self.Dim.C_HOME},
+            'x': lambda dir, rep: [
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
+                                {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+                                {"operation": 'W', "magnitude": 500},
+                                {"operation": 'D', "magnitude": 0},
+                                {"operation": 'L', "magnitude": (90 * dir * rep)},
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
+                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
                                 ],
 
-            'y':lambda dir,rep: [
-                                {"operation":'G', "magnitude": self.Dim.G_HOME},
-                                {"operation":'W', "magnitude":300},
-                                {"operation":'D', "magnitude": self.Dim.D_LAYER_ALL},
-                                {"operation":'W', "magnitude":300},
-                                {"operation":'G', "magnitude": self.Dim.G_GRIP},
-                                {"operation":'W', "magnitude":400},
-                                {"operation":'D', "magnitude": self.Dim.D_HOME},
-                                {"operation":'T', "magnitude": (90 * dir* rep)},
-                                {"operation":'D', "magnitude": self.Dim.D_LAYER_ALL},
-                                {"operation":'G', "magnitude": self.Dim.G_HOME},
-                                {"operation":'W', "magnitude":300},
-                                {"operation":'D', "magnitude": self.Dim.D_LOWER},
-                                {"operation":'T', "magnitude": (90 * dir * rep * -1)}, #return to original value.
-                                {"operation":'D', "magnitude": self.Dim.D_HOME}
+            'y': lambda dir, rep: [
+                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
+                                {"operation": 'W', "magnitude": 300},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+                                {"operation": 'W', "magnitude": 300},
+                                {"operation": 'G', "magnitude": self.Dim.G_GRIP},
+                                {"operation": 'W', "magnitude": 400},
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
+                                {"operation": 'T', "magnitude": (90 * dir* rep)},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
+                                {"operation": 'W', "magnitude": 300},
+                                {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+                                {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, #return to original value.
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME}
                                 ],   
                                 
-            'U':lambda dir,rep: [
-                                {"operation":'G', "magnitude":self.Dim.G_HOME},
-                                {"operation":'C', "magnitude": self.Dim.C_HOME},    
-                                {"operation":'W', "magnitude":300},
-                                {"operation":'D', "magnitude": self.Dim.D_LAYER_TOP},
-                                {"operation":'C', "magnitude": self.Dim.C_CLAMP},
-                                {"operation":'G', "magnitude":self.Dim.G_GRIP},
-                                {"operation":'W', "magnitude":300},
-                                {"operation":'T', "magnitude":(90* dir * rep)},
-                                {"operation":'W', "magnitude":200},
-                                {"operation":'G', "magnitude":self.Dim.G_HOME},
-                                {"operation":'C', "magnitude": self.Dim.C_HOME},
-                                {"operation":'D', "magnitude":0},
-                                {"operation":'T', "magnitude":(90 * dir * rep * -1)}, 
-                                {"operation":'D', "magnitude":self.Dim.D_HOME},
+            'U': lambda dir, rep: [
+                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
+                                {"operation": 'C', "magnitude": self.Dim.C_HOME},    
+                                {"operation": 'W', "magnitude": 300},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_TOP},
+                                {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+                                {"operation": 'G', "magnitude": self.Dim.G_GRIP},
+                                {"operation": 'W', "magnitude": 300},
+                                {"operation": 'T', "magnitude": (90* dir * rep)},
+                                {"operation": 'W', "magnitude": 200},
+                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
+                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
+                                {"operation": 'D', "magnitude": 0},
+                                {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, 
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 ],
 
-            'u':lambda dir,rep: [
-                                {"operation":'C', "magnitude": self.Dim.C_HOME},
-                                {"operation":'D', "magnitude": self.Dim.D_LAYER_MID},
-                                {"operation":'W', "magnitude":400},
-                                {"operation":'C', "magnitude": self.Dim.C_CLAMP},
-                                {"operation":'G', "magnitude":self.Dim.G_GRIP},
-                                {"operation":'W', "magnitude":500},
-                                {"operation":'T', "magnitude":(90* dir * rep)},
-                                {"operation":'W', "magnitude":500},
-                                {"operation":'G', "magnitude":self.Dim.G_HOME},
-                                {"operation":'C', "magnitude": self.Dim.C_HOME},
-                                {"operation":'D', "magnitude":self.Dim.D_LOWER},
-                                {"operation":'T', "magnitude":(90 * dir * rep * -1)}, 
-                                {"operation":'D', "magnitude":self.Dim.D_HOME},
+            'u': lambda dir, rep: [
+                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_MID},
+                                {"operation": 'W', "magnitude": 400},
+                                {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+                                {"operation": 'G', "magnitude": self.Dim.G_GRIP},
+                                {"operation": 'W', "magnitude": 500},
+                                {"operation": 'T', "magnitude": (90* dir * rep)},
+                                {"operation": 'W', "magnitude": 500},
+                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
+                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
+                                {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+                                {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, 
+                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 ],
         }
         for notation in dataclasses:
@@ -365,7 +163,7 @@ class MotorStateTracker:
             ic(abs_states)
         return abs_states
 
-    def _abs_to_relative(self,operation_abs_commands): #->list[]
+    def _abs_to_relative(self, operation_abs_commands):
         commands = []
         for command in operation_abs_commands:
             #only linear operations need abs->relative conversions 
@@ -395,12 +193,12 @@ class MotorStateTracker:
         # }
         #converted unit: deg
         ratios = { 
-        'W': lambda value: value * 1,
-        'L': lambda value: value * 1,
-        'T': lambda value: value * 9.875,
-        'C': lambda value: value * ((360 / 40) / 2),  # double pulley magnitude
-        'D': lambda value: value * (360 / 63),
-        'G': lambda value: value * -3.75 + 311.25  # linear transformation for servo
+            'W': lambda value: value * 1,
+            'L': lambda value: value * 1,
+            'T': lambda value: value * 9.875,
+            'C': lambda value: value * ((360 / 40) / 2),  # double pulley magnitude
+            'D': lambda value: value * (360 / 63),
+            'G': lambda value: value * -3.75 + 311.25  # linear transformation for servo
         }
         for relative_command in relative_commands:
             motor = relative_command["operation"]
@@ -420,8 +218,8 @@ class MotorStateTracker:
 if __name__ == "__main__":
     
     cubesize = 3
-    state_tracker = MotorStateTracker(cubesize = cubesize, debug = True)
-    notation_converter = NotationConvertor(cubesize = cubesize, debug = True)
+    state_tracker = MotorStateTracker(cubesize=cubesize, debug=True)
+    notation_converter = NotationConvertor(cubesize=cubesize, debug=True)
     notations = ["F"]
     dataclasses = notation_converter.to_dataclasses(notations)
     commands = state_tracker.dataclass_to_motor_command(dataclasses)
