@@ -7,9 +7,15 @@ class Dim3x3:
     #EFFECTOR D (DOWN)
     D_LOWER = 0
     D_HOME = 25
-    D_LAYER_TOP = 40
-    D_LAYER_MID = 59
-    D_LAYER_ALL = 80
+    
+    D_LAYER = {
+        1: 41,
+        2: 59,
+        3: 80
+    }
+    # D_LAYER_TOP = 40
+    # D_LAYER_MID = 59
+    # D_LAYER_ALL = 80
 
     #D_LAYER_TOP =D_HOME +SLICE_LEN * 1
     #D_LAYER_MID =D_HOME +SLICE_LEN * 2        
@@ -34,9 +40,15 @@ class Dim2x2:
     #EFFECTOR D (DOWN)
     D_LOWER = 0
     D_HOME = 25
-    D_LAYER_TOP = 41
-    D_LAYER_MID = 59
-    D_LAYER_ALL = 80
+    D_LAYER = {
+        1: 41,
+        2: 59,
+        3: 80
+    }
+    #D_lAYER = [ None, 41, 59, 80]
+    #D_LAYER_TOP = 41
+    #D_LAYER_MID = 59
+    #D_LAYER_ALL = 80
 
     #D_LAYER_TOP =D_HOME +SLICE_LEN * 1
     #D_LAYER_MID =D_HOME +SLICE_LEN * 2        

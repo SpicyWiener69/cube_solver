@@ -1,8 +1,8 @@
 from icecream import ic
 from constants import DIM_CLASSES
-from notation_parser import NotationDataClass, NotationConvertor
+from notation_parser import Move, NotationConvertor
 
-def string_to_action_command(user_input_str) ->list[dict[str,int]]:
+def string_to_action_command(user_input_str) -> list[dict[str, int]]:
     dataclasses_list = []
     # Split the string by ';' and remove any empty tokens
     tokens = [t.strip() for t in user_input_str.split(';') if t.strip()]
@@ -31,14 +31,16 @@ def string_to_action_command(user_input_str) ->list[dict[str,int]]:
 class MotorStateTracker:
     def __init__(self, cubesize=3, debug=False):
         #all linear magnitudes unit in mm
+        self.cubesize = cubesize
         self.Dim = DIM_CLASSES[cubesize]
         self.HOME_STATE = {
-         'D':0,   
-         'C':70,
-         'G':65
+         'D': 0,   
+         'C': 70,
+         'G': 65
         }
         self.motor_state = self.HOME_STATE.copy()
         self.debug = debug
+
     def cube_alignment_command(self) -> str:
         homing_str = self.home_command()
         alignment = [
@@ -52,7 +54,7 @@ class MotorStateTracker:
             {"operation": 'D', "magnitude": self.Dim.D_LOWER},
             {"operation": 'T', "magnitude": 90},
             {"operation": 'W', "magnitude": 1000},
-            {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+            {"operation": 'D', "magnitude": self.Dim.D_LAYER[self.cubesize]},
             {"operation": 'W', "magnitude": 500},
             {"operation": 'G', "magnitude": self.Dim.G_GRIP},
             {"operation": 'W', "magnitude": 1000},
@@ -92,11 +94,11 @@ class MotorStateTracker:
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
 
-    def _from_dataclass_to_abs(self, dataclasses) ->list[dict[str,str]]:
+    def _from_dataclass_to_abs(self, dataclasses:list[Move]) ->list[dict[str,str]]:
         abs_states = []
 
         notation_to_commands = {
-            'x': lambda dir, rep: [
+            'x': lambda dir, rep, _: [
                                 {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
                                 {"operation": 'W', "magnitude": 500},
@@ -106,16 +108,16 @@ class MotorStateTracker:
                                 {"operation": 'C', "magnitude": self.Dim.C_HOME},
                                 ],
 
-            'y': lambda dir, rep: [
+            'y': lambda dir, rep, _: [
                                 {"operation": 'G', "magnitude": self.Dim.G_HOME},
                                 {"operation": 'W', "magnitude": 300},
-                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER[self.cubesize]},
                                 {"operation": 'W', "magnitude": 300},
                                 {"operation": 'G', "magnitude": self.Dim.G_GRIP},
                                 {"operation": 'W', "magnitude": 400},
                                 {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 {"operation": 'T', "magnitude": (90 * dir* rep)},
-                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_ALL},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER[self.cubesize]},
                                 {"operation": 'G', "magnitude": self.Dim.G_HOME},
                                 {"operation": 'W', "magnitude": 300},
                                 {"operation": 'D', "magnitude": self.Dim.D_LOWER},
@@ -123,15 +125,15 @@ class MotorStateTracker:
                                 {"operation": 'D', "magnitude": self.Dim.D_HOME}
                                 ],   
                                 
-            'U': lambda dir, rep: [
+            'U': lambda dir, rep, depth: [
                                 {"operation": 'G', "magnitude": self.Dim.G_HOME},
                                 {"operation": 'C', "magnitude": self.Dim.C_HOME},    
                                 {"operation": 'W', "magnitude": 300},
-                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_TOP},
+                                {"operation": 'D', "magnitude": self.Dim.D_LAYER[depth]},
                                 {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
                                 {"operation": 'G', "magnitude": self.Dim.G_GRIP},
                                 {"operation": 'W', "magnitude": 300},
-                                {"operation": 'T', "magnitude": (90* dir * rep)},
+                                {"operation": 'T', "magnitude": (90 * dir * rep)},
                                 {"operation": 'W', "magnitude": 200},
                                 {"operation": 'G', "magnitude": self.Dim.G_HOME},
                                 {"operation": 'C', "magnitude": self.Dim.C_HOME},
@@ -140,24 +142,24 @@ class MotorStateTracker:
                                 {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 ],
 
-            'u': lambda dir, rep: [
-                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
-                                {"operation": 'D', "magnitude": self.Dim.D_LAYER_MID},
-                                {"operation": 'W', "magnitude": 400},
-                                {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
-                                {"operation": 'G', "magnitude": self.Dim.G_GRIP},
-                                {"operation": 'W', "magnitude": 500},
-                                {"operation": 'T', "magnitude": (90* dir * rep)},
-                                {"operation": 'W', "magnitude": 500},
-                                {"operation": 'G', "magnitude": self.Dim.G_HOME},
-                                {"operation": 'C', "magnitude": self.Dim.C_HOME},
-                                {"operation": 'D', "magnitude": self.Dim.D_LOWER},
-                                {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, 
-                                {"operation": 'D', "magnitude": self.Dim.D_HOME},
-                                ],
+            # 'u': lambda dir, rep: [
+            #                     {"operation": 'C', "magnitude": self.Dim.C_HOME},
+            #                     {"operation": 'D', "magnitude": self.Dim.D_LAYER_MID},
+            #                     {"operation": 'W', "magnitude": 400},
+            #                     {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+            #                     {"operation": 'G', "magnitude": self.Dim.G_GRIP},
+            #                     {"operation": 'W', "magnitude": 500},
+            #                     {"operation": 'T', "magnitude": (90* dir * rep)},
+            #                     {"operation": 'W', "magnitude": 500},
+            #                     {"operation": 'G', "magnitude": self.Dim.G_HOME},
+            #                     {"operation": 'C', "magnitude": self.Dim.C_HOME},
+            #                     {"operation": 'D', "magnitude": self.Dim.D_LOWER},
+            #                     {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, 
+            #                     {"operation": 'D', "magnitude": self.Dim.D_HOME},
+            #                     ],
         }
         for notation in dataclasses:
-            magnitude = notation_to_commands.get(notation.name)(notation.direction, notation.repetition)
+            magnitude = notation_to_commands.get(notation.name)(notation.direction, notation.repetition, notation.depth)
             abs_states.extend(magnitude)
         if self.debug:
             ic(abs_states)
@@ -167,7 +169,7 @@ class MotorStateTracker:
         commands = []
         for command in operation_abs_commands:
             #only linear operations need abs->relative conversions 
-            if command["operation"] in ['D','C']:  
+            if command["operation"] in ['D', 'C']:  
                 relative = command["magnitude"]- self.motor_state[command["operation"]]   
                 #update motor_state
                 self.motor_state[command["operation"]] = command["magnitude"]              
@@ -220,7 +222,7 @@ if __name__ == "__main__":
     cubesize = 3
     state_tracker = MotorStateTracker(cubesize=cubesize, debug=True)
     notation_converter = NotationConvertor(cubesize=cubesize, debug=True)
-    notations = ["F"]
+    notations = ["D"]
     dataclasses = notation_converter.to_dataclasses(notations)
     commands = state_tracker.dataclass_to_motor_command(dataclasses)
     print('________________________')

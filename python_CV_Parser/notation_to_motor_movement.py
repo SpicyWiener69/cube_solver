@@ -76,9 +76,9 @@ class notationConvertor:
 
     def convert_all(self,solution):
         modified = self._solution_to_modified(solution)
-        cleaned = self._delete_duplicate(modified)
-        return cleaned
-
+        #cleaned = self._delete_duplicate(modified)
+        return modified ###########################
+ 
 #TODO: notation_to_dataclass,notation_dataclass_to_abs_command cleanup
 
 def notation_to_dataclass(notations)->list:
@@ -146,9 +146,6 @@ def NotationToEndeffector(notation_dataclasses):
             abs_positions[effector] = abs_position    #update abs_positions dictionary
             
     return end_effector_instructions
-
-
-
 
 if __name__ == "__main__":
 
