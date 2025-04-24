@@ -5,9 +5,9 @@ typedef enum State
 {
 	RECEIVE,
 	REQUEST_TRANSMIT,
-	PARSING,
+	//PARSING,
 	SOLVING,
-	ERR
+	//ERR
 } State;
 State state = RECEIVE;
 
@@ -21,11 +21,7 @@ int main(void)
 	// GPIO_Init();
 	Uart2_Init();
 	servo_config_T servo = servo_Init(90);
-	// servo = moveServoMotorAbs(servo,180);
-	// servo = moveServoMotorAbs(servo,0);
-	// servo = moveServoMotorRelative(servo,-20);
-	// servo = moveServoMotorRelative(servo,100);
-
+	
 	Motor_config_T motorLR = initMotor('L', GPIOA, 6, 7, 1);
 	Motor_config_T motorD = initMotor('D', GPIOB, 4, 5, 1);
 	Motor_config_T motorT = initMotor('T', GPIOB, 14, 15, -1);
@@ -70,32 +66,9 @@ int main(void)
 					
 				}
 			
-			// for (int i = 0; i < task_lst.length; ++i)
-			// {
-				// uint32_t i = 0;
-				// char *pch;
-				// Task_lst_T task_lst = {.length = 0, .task = {{0}}};
-				// pch = strtok(command_str.arr, ";");
-				// while (pch != NULL)
-				// {
-				// 	Task_T task_instance = string_to_task(pch);
-				// 	if (!task_instance.parse_success)
-				// 	{ // parse error, early return
-				// 		task_lst.parse_success = 0;
-				// 		return task_lst;
-				// 	}
-				// 	task_lst.task[i] = task_instance;
-				// 	pch = strtok(NULL, ";");
-				// 	i++;
-				// }
-				// task_lst.length = i;
-				// task_lst.parse_success = 1;
-				// return task_lst;
-
-				// Task_T task = task_lst.task[i];
 				if (action.id == 'G')
 				{
-					servo = moveServoMotorRelative(servo, action.magnitude);
+					servo = moveServoMotorAbs(servo, action.magnitude);
 				}
 				else if (action.id == 'W'){
 					ResetUsTimer();
@@ -124,8 +97,6 @@ int main(void)
 			break;
 
 		case REQUEST_TRANSMIT:
-			// commands.arr[] = "RE#";
-			// transmit_command(commands);
 			transmit_byte('>');
 			state = RECEIVE;
 			break;
@@ -185,10 +156,10 @@ Task_T initTaskByMotorID(char motorID)
 	switch (motorID)
 	{
 	case 'T':
-		task.lowSpeedInterval = 800;
-		task.highSpeedInterval = 500;
-		task.accel = 4;
-		task.stepsPer360 = 200;
+		task.lowSpeedInterval = 430;
+		task.highSpeedInterval = 60;
+		task.accel = 1;
+		task.stepsPer360 = 1600;
 		break;
 	case 'L':
 		task.lowSpeedInterval = 1000;
@@ -248,7 +219,7 @@ Task_T string_to_task(char motorID, int32_t deg)
 	// char motorID;
 	// int32_t deg;
 	// if (sscanf(str, " %c:%ld", &motorID, &deg) != 2)
-	// {
+	// {8000
 	// 	task.parse_success = 0;
 	// 	return task;
 	// }
@@ -285,7 +256,7 @@ Task_T string_to_task(char motorID, int32_t deg)
 // 		task_lst.task[i] = task_instance;
 // 		pch = strtok(NULL, ";");
 // 		i++;
-// 	}
+// 	}8000
 // 	task_lst.length = i;
 // 	task_lst.parse_success = 1;
 // 	return task_lst;

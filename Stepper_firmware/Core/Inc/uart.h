@@ -5,7 +5,7 @@
 #include "gpio_def.h"
 #include <string.h>
 
-#define MAX_RECEIVE_LENGTH 2000
+#define MAX_RECEIVE_LENGTH 5000
 
 typedef struct{
     char arr[MAX_RECEIVE_LENGTH];

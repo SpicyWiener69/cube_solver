@@ -2,7 +2,7 @@
 #include "stm32f4xx.h"
 #include "gpio_def.h"
 
-#define ARRAY_SIZE 5000
+#define ARRAY_SIZE 8000
 #define MAX_TASK 500
 #define MAX_STEPPER 6
 
