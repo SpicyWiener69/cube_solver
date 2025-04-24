@@ -23,10 +23,11 @@ def calibrate_mask(cubesize = 3) -> None:
     ic(aoi_center_list)
     mask = np.zeros((frame.shape), dtype = np.uint8)
     aoi_corners_list = []
-    for coordinate in aoi_center_list:
+    for index, coordinate in enumerate(aoi_center_list):
         top_left, bottom_right = center_square_to_corners(coordinate)
         aoi_corners_list.append((top_left, bottom_right))
         cv2.rectangle(mask, pt1 = top_left, pt2 = bottom_right, thickness= -1, color = 255)
+        cv2.putText(mask, str(index), top_left, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
     save_points_json(aoi_corners_list)
     ic(aoi_corners_list)
     #cv2.namedWindow('window', cv2.WINDOW_NORMAL)
@@ -62,7 +63,7 @@ def fetch_pattern_coordinates(top_left,bottom_right,cubesize) -> list[tuple]:
     #rectangular pattern of spacing x_step along x, y_step along y
     for i in range(cubesize):
         for j in range(cubesize):
-            coordinates.append((top_left[0] + x_step * i, top_left[1] + y_step * j))
+            coordinates.append((top_left[0] + x_step * j, top_left[1] + y_step * i))
     return coordinates
 
 def fetch_mouse_coordinates(image) -> tuple[tuple]:

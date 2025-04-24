@@ -1,7 +1,9 @@
+import json
+import math
+
 import cv2
 import numpy as np
 from icecream import ic
-import json
 
 from mask_calibration import resize_frame
 from constants import VIDEO_ADDRESS
@@ -9,19 +11,26 @@ from constants import VIDEO_ADDRESS
 class compareError(Exception):
     pass
 
+class hsvrangeError(Exception):
+    pass
+
 def nothing(_):
     pass
 
-def resolve_colors(hsv_dict):
-    '''
-    input: hsv color of every cubie, starting from U1.
-    the order of sides is listed as:  URFDLB 
 
+def resolve_colors(rgb_dict):
+    '''
+    input: 
+    hsv color dictionary of every cubie, starting from U1.
+    the order of sides is listed as:  FRBLUD
     {"1": [20, 118, 121], ....}
 
-    output: DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD
+    output: 
+        cubestate in URFDLB form,
+        with ordering as: URFDLB 
+        DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD
 
-    a typical 3x3 will look like this:
+    a 3x3 will look like this:
 
                 |************|
                 |*U1**U2**U3*|
@@ -45,36 +54,81 @@ def resolve_colors(hsv_dict):
                 |*D7**D8**D9*|
                 |************|
     '''
-    cubestate_lst = [None] * len(hsv_dict)
-    for cubie, hsv in hsv_dict:
+
+    rgb_dict = swap_cubie_order(rgb_dict)
+    cubestate_lst = [None] * len(rgb_dict)
+    hsv_dict = rgb_to_hsv_dict(rgb_dict)
+    for cubie, hsv in hsv_dict.items():
         color_code = solve_hsv_color(hsv)
-        cubestate_lst[cubie] = color_code
+        cubestate_lst[cubie-1] = color_code
 
     return ''.join(cubestate_lst)
 
-def solve_hsv_color(hsv) ->str: #TODO:
-    # hsv_range = { 'or': ((32,120,120),(36,255,255)),'red':((347,120,120),(13,255,255)) }
-    pass
+def swap_cubie_order(rgb_dict:dict) -> dict:
+    '''
+    swaps the cubie ordering from detection(FRBLUD) to kociemba format(URFDLB)
+    '''
+    cube_size = int(math.sqrt(len(rgb_dict) / 6))
+    face_square_count = cube_size**2
+    new_pos = {}
 
-def read_hsv_json() -> dict:
+    for cubie, rgb in rgb_dict.items():
+        # 1 -> face_square_count, Face 'F'
+        if cubie <= face_square_count:
+            offset = 2
+        # Face 'R'
+        elif  face_square_count < cubie <=  face_square_count * 2:    
+            offset = 0
+        # Face 'B'
+        elif  face_square_count * 2 < cubie <=  face_square_count * 3:    
+            offset = 3
+        # Face 'L'
+        elif  face_square_count * 3 < cubie <=  face_square_count * 4:    
+            offset = 1
+        # Face 'U'
+        elif  face_square_count * 4 < cubie <=  face_square_count * 5:    
+            offset = -4
+        # Face 'D'
+        elif  face_square_count * 5 < cubie <=  face_square_count * 6:    
+            offset = -2
+        
+        new_pos[cubie + (offset * face_square_count)] = rgb
+
+    return new_pos
+
+def rgb_to_hsv_dict(rgb_dict):
+    hsv_dict = {}
+    for cubie, rgb in rgb_dict.items():
+        hsv = cv2.cvtColor(np.array([[rgb]], dtype = np.uint8),cv2.COLOR_RGB2HSV)[0][0]
+        hsv_dict[cubie] = hsv
+    return hsv_dict
+
+def solve_hsv_color(hsv) -> str: #TODO:
+    hsv_ranges = read_hsv_range_json()
+    for color_code, bounds in hsv_ranges.items():
+        if circular_inrange_single(hsv, bounds[0], bounds[1]):
+            return color_code
+    raise hsvrangeError(f'{hsv} hsv color not in range of {hsv_ranges}')
+    
+def read_hsv_range_json() -> dict:
     file_path = "hsv.json" 
 
     try:
         with open(file_path) as file:
-            hsv_dict = json.load(file)
+            hsv_ranges = json.load(file)
             #convert from strings to tuples
             #hsv_dict = {eval(key): eval(value) for key, value in hsv_dict.items()}
-        return hsv_dict
+        return hsv_ranges
     
     except FileNotFoundError:
         print(f'file not found, creating one with default values at {file_path}')
-        hsv_dict = {
+        hsv_ranges = {
                 "U": [[32, 120, 120], [36, 255, 255]], "R": [[0, 120, 120], [30, 255, 255]],\
                 "F": [[0, 120, 120], [30, 255, 255]], "D": [[0, 120, 120], [30, 255, 255]], \
                 "L": [[0, 120, 120], [30, 255, 255]], "B": [[0, 120, 120], [30, 255, 255]]
                 }
-        dump_hsv_json(hsv_dict)
-        return hsv_dict
+        dump_hsv_json(hsv_ranges)
+        return hsv_ranges
 
 def dump_hsv_json(hsv_dict):
     with open('hsv.json', "w") as f:
@@ -121,7 +175,7 @@ def hsv_color_calibration() -> None:
     current_color_index = cv2.getTrackbarPos(color_picker, windowname)
     prev_color_index = current_color_index
     color_code = color_index_code[current_color_index]
-    hsv_dict = read_hsv_json()
+    hsv_dict = read_hsv_range_json()
     init_trackbars(hsv_dict, color_code, windowname)
     
     ic('press space to save hsv upper and lower values, q to quit without saving')
@@ -130,7 +184,7 @@ def hsv_color_calibration() -> None:
 
         if prev_color_index != current_color_index:
             #update hsv_dict when another face is picked
-            hsv_dict[color_index_code[prev_color_index]] = [[l_h, l_s, l_v], [u_h, u_s, u_v]]
+            #hsv_dict[color_index_code[prev_color_index]] = [[l_h, l_s, l_v], [u_h, u_s, u_v]]
             ic(color_index_code[prev_color_index])
             ic(hsv_dict)
             color_code = color_index_code[current_color_index]
@@ -147,9 +201,9 @@ def hsv_color_calibration() -> None:
         u_s = cv2.getTrackbarPos('Upper S', windowname)
         l_v = cv2.getTrackbarPos('Lower V', windowname)
         u_v = cv2.getTrackbarPos('Upper V', windowname)
-        #hsv_dict[color_index_code[current_color_index]] = [[l_h, l_s, l_v], [u_h, u_s, u_v]]
+        hsv_dict[color_index_code[current_color_index]] = [[l_h, l_s, l_v], [u_h, u_s, u_v]]
 
-        masked = circular_inrange(hsv_frame,[l_h, l_s, l_v], [u_h, u_s, u_v])
+        masked = circular_inrange_matrix(hsv_frame,[l_h, l_s, l_v], [u_h, u_s, u_v])
         displayer_frame = np.hstack([frame, hsv_frame, cv2.cvtColor(masked, cv2.COLOR_GRAY2BGR)])
         cv2.imshow(windowname, displayer_frame)
 
@@ -179,10 +233,15 @@ def circular_compare(value, lowerbound, upperbound, endpoints = (0,180)):
 
     return False
 
-def circular_inrange(img, lowerbounds, upperbounds) -> np.array:
+def circular_inrange_single(value, lowerbounds, upperbounds):
+    #values H, S, V need to all be inrange of lower-upper values defined in hsv_dict
+    return np.all(circular_inrange_matrix(np.array(value), lowerbounds, upperbounds) == 255)
+
+
+def circular_inrange_matrix(img, lowerbounds, upperbounds) -> np.array:
     #Hue in normal comparision
-    lowerbounds = np.array(lowerbounds)
-    upperbounds = np.array(upperbounds)
+    lowerbounds = np.array(lowerbounds, dtype = np.uint8)
+    upperbounds = np.array(upperbounds, dtype = np.uint8)
     # for lower, upper in zip(lowerbounds,upperbounds):
     #     if lower == upper:
     #         raise compareError("any element in lower bounds and upper bounds should never be equal")
@@ -192,8 +251,8 @@ def circular_inrange(img, lowerbounds, upperbounds) -> np.array:
     #Hue in wrap comparision
     elif lowerbounds[0] > upperbounds[0]:
         #[180] + upperbounds[:2] , [0] + lowerbounds[:2]
-        part1 = cv2.inRange(img, lowerbounds, np.insert(upperbounds[:2], 0, 180))
-        part2 = cv2.inRange(img, np.insert(lowerbounds[:2], 0, 0), upperbounds)
+        part1 = cv2.inRange(img, lowerbounds, np.insert(upperbounds[1:], 0, 180))
+        part2 = cv2.inRange(img, np.insert(lowerbounds[1:], 0, 0), upperbounds)
         return cv2.bitwise_or(part1,part2)
     
 def sanity_check():
@@ -201,15 +260,14 @@ def sanity_check():
     pass
 
 
-
-
-
-
 def test_circular_inrange():
+    ic(circular_inrange_single(np.array([3,50,70]), [175, 50, 50], [5, 255, 255]))
+    ic(circular_inrange_single(np.array([174,40,70]), [174, 50, 50], [176, 255, 255]))
+    ic(circular_inrange_matrix(np.array([3,50,70]), [175, 50, 50], [5, 255, 255]))
     img = cv2.imread("example.jpg")
-    
-    img1 = circular_inrange(img, [10, 50, 50], [170, 255, 255])
-    img2 = circular_inrange(img, [175, 50, 50], [5, 255, 255])
+    img1 = circular_inrange_matrix(img, [10, 50, 50], [170, 255, 255])
+    img2 = circular_inrange_matrix(img, [175, 50, 50], [5, 255, 255])
+    img3 = circular_inrange_matrix(img3, [175, 50, 50], [5, 255, 255])
     img = resize_frame(img,20)
     img1 = resize_frame(img1,20)
     img2 = resize_frame(img2,20)
@@ -227,7 +285,12 @@ if __name__ == "__main__":
     
     # ic(circular_compare(5, 0, 10))  # True  normal
     #test_circular_inrange()
-    read_hsv_json() 
+    #ic(swap_cubie_order({ 2: [90, 34, 34], 1: [116, 78, 48], 3: [123, 78, 47], 4: [146, 147, 166], 5: [146, 163, 187], 6: [48, 72, 130], 7: [126, 81, 47], 8: [163, 179, 198], 9: [132, 131, 82], 10: [50, 78, 69], 11: [37, 48, 97], 12: [36, 48, 102], 13: [94, 38, 46], 14: [55, 88, 89], 15: [135, 134, 88], 16: [47, 81, 72], 17: [135, 139, 90], 18: [52, 86, 77], 19: [138, 141, 88], 20: [151, 159, 189], 21: [102, 41, 37], 22: [100, 35, 35], 23: [60, 70, 105], 24: [133, 78, 44]}))
+    #ic(resolve_colors({"1": [116, 78, 48], "2": [90, 34, 34], "3": [123, 78, 47], "4": [146, 147, 166], "5": [146, 163, 187], "6": [48, 72, 130], "7": [126, 81, 47], "8": [163, 179, 198], "9": [132, 131, 82], "10": [50, 78, 69], "11": [37, 48, 97], "12": [36, 48, 102], "13": [94, 38, 46], "14": [55, 88, 89], "15": [135, 134, 88], "16": [47, 81, 72], "17": [135, 139, 90], "18": [52, 86, 77], "19": [138, 141, 88], "20": [151, 159, 189], "21": [102, 41, 37], "22": [100, 35, 35], "23": [60, 70, 105], "24": [133, 78, 44]}))
+
+    #solve_hsv_color(np.array([4,40,160]))
+            
+    #read_hsv_range_json() 
     hsv_color_calibration()
 
 

@@ -8,8 +8,8 @@ import numpy as np
 from icecream import ic
 
 from mask_calibration import resize_frame
-from rubikscolorresolver.solver import resolve_colors
-
+#from rubikscolorresolver.solver import resolve_colors
+from color_resolver import resolve_colors
 
 class Detector:
     def __init__(self, cubesize, debug=False, video_address="https://10.42.0.99:8080/video"):
@@ -128,7 +128,8 @@ class Detector:
         self.detect_count += 1
         
     def solve_color(self) -> str: 
-        cubestate_str = resolve_colors([ "-j", "--rgb", str(self.rgb_dict)])
+        #cubestate_str = resolve_colors([ "-j", "--rgb", str(self.rgb_dict)])
+        cubestate_str = resolve_colors(self.rgb_dict)
         self.reset_detection()
         return cubestate_str 
     
@@ -143,12 +144,12 @@ class Detector:
                 bgr = self._rgb2bgr(rgb, rounding=False)
                 # bgr = [None] * 3
                 # bgr[0], bgr[1], bgr[2],  = rgb[2], rgb[1], rgb[0]
-                cv2.rectangle(canvas, pt1=(interval_x[i], interval_y[j]), pt2=(interval_x[i+1], interval_y[j+1]),\
+                cv2.rectangle(canvas, pt1=(interval_x[j], interval_y[i]), pt2=(interval_x[j+1], interval_y[i+1]),\
                               color=bgr, thickness=-1)
                 cubie_index += 1
         cv2.imshow('face', canvas)
         cv2.waitKey(1000)
-
+        cv2.destroyWindow('face')
 
 if __name__ == "__main__":
     detector = Detector(cubesize=3, debug=True)

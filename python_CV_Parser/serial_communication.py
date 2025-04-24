@@ -34,7 +34,11 @@ class  RobotController:
         solution = fetch_solution(cube_state = cube_state)
         print(f'solution found: {solution}')
         print("solve starting:")
-
+        time.sleep(1)
+        # dataclasses = self.notation_convertor.to_dataclasses(solution)
+        # command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
+        # self.send_command(command)
+        # print(f'completed')
 
     def _scan_six_sides(self) -> str:
         moveset = [['y'],['y'],['y'],["y", "x'"],["x2"]]
