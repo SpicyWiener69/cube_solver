@@ -31,19 +31,22 @@ class  RobotController:
     def scanner_mode(self):
         cube_state = self._scan_six_sides()
         print(cube_state)
-        solution = fetch_solution(cube_state = cube_state)
-        print(f'solution found: {solution}')
-        print("solve starting:")
-        #time.sleep(1)
-        dataclasses = self.notation_convertor.to_dataclasses(solution)
-        command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
-        self.send_command(command)
-        print(f'completed')
+        solution = fetch_solution(cube_state=cube_state)
+        if solution == ['is', 'already', 'solved']:
+            print('already solved')
+        else:
+            print(f'solution found: {solution}')
+            print("solve starting:")
+            #time.sleep(1)
+            dataclasses = self.notation_convertor.to_dataclasses(solution)
+            command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
+            self.send_command(command)
+            print(f'completed')
 
     def _scan_six_sides(self) -> str:
         moveset = [['y'],['y'],['y'],["y", "x'"],["x2"]]
         print("starting stream...")
-        detector = Detector(cubesize=self.cubesize, debug = True)
+        detector = Detector(cubesize=self.cubesize, debug = False)
 
         #align cube before detection
         command = self.motor_state_tracker.cube_alignment_command()
@@ -57,9 +60,9 @@ class  RobotController:
             dataclasses = self.notation_convertor.to_dataclasses(move)
             command = self.motor_state_tracker.dataclass_to_motor_command(dataclasses)
             self.send_command(command)
+            time.sleep(1.5)
             detector.display_bboxes()
             detector.detect_face()
-            time.sleep(1)
             
         print("ending stream")
         # detector.stop()
@@ -112,18 +115,24 @@ class  RobotController:
     def run(self):
         """Main loop to select and run modes."""
         while True:
-            self.cubesize = int(input("Input cube_layer (or '=' to exit): "))
-            self.motor_state_tracker = MotorStateTracker(cubesize=self.cubesize)
-            self.notation_convertor = NotationConvertor(cubesize=self.cubesize)
-            while True:
-                picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics. type '=' to exit:")
-                if picker == '=':
-                    break
-                mode_function = self.modes.get(picker)
-                if mode_function:
-                    mode_function()
-                else:
-                    print("Invalid selection. Try again.")
+            input_str = input("Input cube_layer (or '=' to exit): ")
+            if input_str == '=':
+                break
+            if int(input_str) not in range(2,5):
+                print("Invalid selection. Try again.")
+            else:
+                self.cubesize = int(input_str)
+                self.motor_state_tracker = MotorStateTracker(cubesize=self.cubesize)
+                self.notation_convertor = NotationConvertor(cubesize=self.cubesize)
+                while True:
+                    picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics. type '=' to exit:")
+                    if picker == '=':
+                        break
+                    mode_function = self.modes.get(picker)
+                    if mode_function:
+                        mode_function()
+                    else:
+                        print("Invalid selection. Try again.")
 
  # Run the controller
 if  __name__ ==  "__main__":

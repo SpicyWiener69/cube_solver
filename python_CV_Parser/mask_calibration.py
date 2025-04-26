@@ -3,35 +3,26 @@ import numpy as np
 from icecream import ic
 import json
 import math
-# Create a blank image (black)
-# width, height = 500, 500
-# image = np.zeros((height, width, 3), dtype=np.uint8)
 
-# class mask_saver:
-#     def __init__():
-def calibrate_mask(cubesize = 3) -> None:
+
+def calibrate_mask(cubesize) -> None:
     camera = cv2.VideoCapture("https://10.42.0.99:8080/video")
     _, rawframe = camera.read()
     frame = resize_frame(rawframe)
-    # scale_percent = 50
-    # width = int(image.shape[1] * scale_percent / 100)
-    # height = int(image.shape[0] * scale_percent / 100)
-    # image = cv2.resize(image,(width, height))  
-    # image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     top_left, bottom_right = fetch_mouse_coordinates(frame)
+    rectangle_side_len_mean = ((bottom_right[0] - top_left[0]) + (bottom_right[0] - top_left[0])) // 2
     aoi_center_list = fetch_pattern_coordinates(top_left, bottom_right, cubesize)
     ic(aoi_center_list)
     mask = np.zeros((frame.shape), dtype = np.uint8)
     aoi_corners_list = []
     for index, coordinate in enumerate(aoi_center_list):
-        top_left, bottom_right = center_square_to_corners(coordinate)
+        aoi_side_len = rectangle_side_len_mean // cubesize - 10
+        top_left, bottom_right = center_square_to_corners(coordinate, side_len=aoi_side_len) 
         aoi_corners_list.append((top_left, bottom_right))
-        cv2.rectangle(mask, pt1 = top_left, pt2 = bottom_right, thickness= -1, color = 255)
+        cv2.rectangle(mask, pt1=top_left, pt2=bottom_right, thickness=-1, color=255)
         cv2.putText(mask, str(index), top_left, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
     save_points_json(aoi_corners_list)
-    ic(aoi_corners_list)
-    #cv2.namedWindow('window', cv2.WINDOW_NORMAL)
-    #cv2.setWindowProperty('window', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN) 
+    #ic(aoi_corners_list)
     cv2.imshow('window',mask)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -113,7 +104,7 @@ def resize_frame(frame,scale_percent = 50) -> np.array:
     return frame
 
 if __name__ == '__main__':
-    calibrate_mask()
+    calibrate_mask(cubesize=2)
    
 
     

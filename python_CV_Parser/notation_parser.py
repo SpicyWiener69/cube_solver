@@ -24,6 +24,12 @@ class NotationConvertor:
     def _verify_notations(self, notations):
         #TODO:test
         valid_dict = {
+            2: [ 
+                "x", "x2", "x'", "y", "y2", "y'",
+                "U", "U'", "U2", "L", "L'", "L2", "F", "F'", "F2",
+                "R", "R'", "R2", "B", "B'", "B2", "D", "D'", "D2"
+            ],
+
             3: [
                 "x", "x2", "x'", "y", "y2", "y'",
                 "U", "U'", "U2", "L", "L'", "L2", "F", "F'", "F2",
