@@ -205,7 +205,7 @@ class MotorStateTracker:
         for relative_command in relative_commands:
             motor = relative_command["operation"]
             magnitude = relative_command["magnitude"]
-            if motor == 'G':
+            if self.debug and motor == 'G':
                 print(f'G in mm:{magnitude}')
             deg = ratios[motor](magnitude)
             deg_rounded = round(deg)
