@@ -6,6 +6,7 @@ import math
 
 
 def calibrate_mask(cubesize) -> None:
+    while rue:
     camera = cv2.VideoCapture("https://10.42.0.99:8080/video")
     _, rawframe = camera.read()
     frame = resize_frame(rawframe)
@@ -16,7 +17,7 @@ def calibrate_mask(cubesize) -> None:
     mask = np.zeros((frame.shape), dtype = np.uint8)
     aoi_corners_list = []
     for index, coordinate in enumerate(aoi_center_list):
-        aoi_side_len = rectangle_side_len_mean // cubesize - 10
+        aoi_side_len = rectangle_side_len_mean // cubesize - 20
         top_left, bottom_right = center_square_to_corners(coordinate, side_len=aoi_side_len) 
         aoi_corners_list.append((top_left, bottom_right))
         cv2.rectangle(mask, pt1=top_left, pt2=bottom_right, thickness=-1, color=255)
@@ -104,7 +105,7 @@ def resize_frame(frame,scale_percent = 50) -> np.array:
     return frame
 
 if __name__ == '__main__':
-    calibrate_mask(cubesize=2)
+    calibrate_mask(cubesize=3)
    
 
     

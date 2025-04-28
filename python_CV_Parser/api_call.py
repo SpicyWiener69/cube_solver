@@ -1,6 +1,9 @@
-
 import subprocess
 import os
+
+import kociemba
+from icecream import ic
+
 from rubikscolorresolver.solver import resolve_colors
 
 def fetch_solution(cube_state):
@@ -16,6 +19,11 @@ def fetch_solution(cube_state):
     os.chdir(original_wd)
     return solution
 
+
+# def fetch_solution(cube_state):
+#     string = kociemba.solve(cube_state)
+#     return string.split(' ')
+
 if __name__ == "__main__":
     #dummy cases for testing
 
@@ -26,12 +34,12 @@ if __name__ == "__main__":
     # fetch_solution(cube_state)
     
     cube_state = 'UUUUUUUUURRRRLRRRRFFFFBFFFFDDDDDDDDDLLLLRLLLLBBBBFBBBB'
-    fetch_solution(cube_state)
+    ic(fetch_solution(cube_state))
 
 
 
-    cube_state = 'BRBLLLBRDLBBDDRRFUDFUDUDFUDDDRURBBBUUDRLFRDLLFBRFLRFLFFFBRULDRUBUBBLDBFRDLLUBUDDULFLRRFLFUBFUFUR'
-    fetch_solution(cube_state)
+    #cube_state = 'BRBLLLBRDLBBDDRRFUDFUDUDFUDDDRURBBBUUDRLFRDLLFBRFLRFLFFFBRULDRUBUBBLDBFRDLLUBUDDULFLRRFLFUBFUFUR'
+    #fetch_solution(cube_state)
 
     
 

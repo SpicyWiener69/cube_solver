@@ -11,26 +11,7 @@ from mask_calibration import resize_frame
 #from rubikscolorresolver.solver import resolve_colors
 from color_resolver import resolve_colors
 
-class VideoStream:
-    def __init__(self, debug=False, video_address="https://10.42.0.99:8080/video"):
-        self.video_address = video_address
-        self.cap = cv2.VideoCapture(self.video_address)
-        self.debug = debug
 
-    def start(self):
-        threading.Thread(target=self._update, daemon=True, args=()).start()
-        #time.sleep(1)
-        return self
-
-    def _update(self):
-        while not self.stopped:
-            if not self.cap.isOpened():
-                self.stop()
-                return
-            self.ret, self.frame = self.cap.read()
-    
-    def _read_frame(self):
-        return self.ret, self.frame
     
 
 
