@@ -39,7 +39,7 @@ int main(void)
 	while (1)
 	{
 		CommandStr commands;
-		Task_lst_T task_lst;
+		//Task_lst_T task_lst;
 		switch (state)
 		{
 		case RECEIVE:
@@ -85,6 +85,7 @@ int main(void)
 					//   break;
 					// }
 					updateTaskProfilePtr(&task, &profile);
+					setMotorDirPin(motor, &task);
 					while (1)
 					{
 						if (moveMotor(motor, &task))

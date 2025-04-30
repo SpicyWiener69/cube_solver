@@ -116,9 +116,8 @@ ArrayStruct_T generateTrapezoidProfile(Task_T task)
     return profile;
 }
 
-uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
-{   
-    // Set the motor direction based on the current task's direction.
+void setMotorDirPin(Motor_config_T motor, Task_T *taskPtr)
+{   // Set the motor direction based on the current task's direction.
     if (taskPtr->direction == motor.motor_direction)
     {
         setPin(motor.GPIO, motor.dirPin);
@@ -127,6 +126,21 @@ uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
     {
         resetPin(motor.GPIO, motor.dirPin);
     }
+    volatile uint32_t now = GetUsTime();
+    while (GetUsTime() - now < 1000){}  // wait 1ms for dirPin to settle
+}
+
+uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
+{   
+    // Set the motor direction based on the current task's direction.
+    // if (taskPtr->direction == motor.motor_direction)
+    // {
+    //     setPin(motor.GPIO, motor.dirPin);
+    // }
+    // else if (taskPtr->direction == -1 * motor.motor_direction)
+    // {
+    //     resetPin(motor.GPIO, motor.dirPin);
+    // } 
 
     // Get the current time.
     volatile uint32_t now = GetUsTime();
@@ -150,7 +164,7 @@ uint8_t moveMotor(Motor_config_T motor, Task_T *taskPtr)
     }
 
     // return 1 to indicate completion.
-    if (taskPtr->_index > taskPtr->profileP->size)
+    if (taskPtr->_index >= taskPtr->profileP->size)
         return 1;
 
     return 0;
