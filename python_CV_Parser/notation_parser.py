@@ -165,7 +165,7 @@ class NotationConvertor:
             while i < len(modified_dataclasses) - 1:
                 data1 = modified_dataclasses[i]
                 data2 = modified_dataclasses[i+1]
-                if (data1.name == data2.name) and (data1.direction == data2.direction * -1) and (data1.depth == data2.depth):
+                if (data1.name == data2.name) and (data1.direction == data2.direction * -1) and (data1.depth == data2.depth) and (data1.repetition == data2.repetition):
                     i += 2
                 else:
                     cleaned_dataclasses.append(data1)
@@ -198,5 +198,5 @@ class NotationConvertor:
 
 if __name__ == "__main__":
     notationconverter = NotationConvertor(cubesize=3, debug=True)
-    notations = ['U2', "D'"]
+    notations = ['D2', "L2"]
     notationconverter.to_dataclasses(notations)

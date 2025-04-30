@@ -13,6 +13,7 @@ class VideoStream:
         self.ret = None
         self.frame = None
         self.resized_frame = None
+        self.lock = threading.Lock()
         #self.window = cv2.namedWindow("video frame")
     def start(self):
         threading.Thread(target=self._update, daemon=True).start()
@@ -22,11 +23,12 @@ class VideoStream:
     #     self.display = display_flag
 
 
-    #@staticmethod
-    def resize_frame(self, frame, scale_percent=50) -> np.ndarray:
+    @staticmethod
+    def resize_frame(frame, scale_percent=50) -> np.ndarray:
         '''
         Custom resizing for current computer display; adjust values if needed.
         '''
+
         width = int(frame.shape[1] * scale_percent / 100)
         height = int(frame.shape[0] * scale_percent / 100)
         frame = cv2.resize(frame, (width, height))  
@@ -41,7 +43,7 @@ class VideoStream:
             if not self.cap.isOpened():
                 self.stop()
                 return
-
+            
             self.ret, self.frame = self.cap.read()
             if not self.ret:
                 continue  # Skip if frame is not read properly

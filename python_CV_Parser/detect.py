@@ -6,14 +6,26 @@ import warnings
 import cv2
 import numpy as np
 from icecream import ic
+import functools
 
 from mask_calibration import resize_frame
+
 #from rubikscolorresolver.solver import resolve_colors
 from color_resolver import resolve_colors
 
 
-    
 
+
+def timeit(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"{func.__name__} took {elapsed_time:.4f} seconds to run")
+        return result
+    return wrapper
 
 
 class Detector:
@@ -27,27 +39,38 @@ class Detector:
         self.cap = cv2.VideoCapture(self.video_address)
         self.ret, self.frame = self.cap.read()
         self.stopped = False
+        self.lock = threading.Lock()
 
     def start(self):
-        threading.Thread(target=self._update, args=()).start()
+        self.thread = threading.Thread(target=self._update, daemon=True, args=())
+        self.thread.start()
         time.sleep(1)
         return self
 
+    @timeit
     def _update(self):
         while not self.stopped:
             if not self.cap.isOpened():
-                self.stop()
+                self.stopped = True
+                
                 return
-            self.ret, self.frame = self.cap.read()
-
+              # Do the SLOW read OUTSIDE the lock
+            ret, new_frame = self.cap.read()
+        
+            # Use a short lock only for the assignment
+            with self.lock:
+                self.ret = ret
+                self.frame = new_frame
+    @timeit
     def _read_frame(self):
-        return self.ret, self.frame
+        with self.lock:
+            return self.ret, self.frame
 
     def stop(self):
         self.stopped = True
         if self.cap.isOpened():
             self.cap.release()
-
+        #self.thread.join()
     # def calibrate_mask(self):
     #     mask_calibration.calibrate_mask(self.cubelayer)
 

@@ -7,6 +7,8 @@ from notation_parser import NotationConvertor
 from api_call import fetch_solution 
 from logger import Logger
 
+SOLVABLE_CUBE_SIZES = [2,3]
+
 class  RobotController:
     def __init__(self, port_name='/dev/ttyACM0', baudrate=57600, timeout=400):
         """Initialize the serial connection and mode selection."""
@@ -129,8 +131,8 @@ class  RobotController:
             input_str = input("Input cube_layer (or '=' to exit): ")
             if input_str == '=':
                 break
-            if int(input_str) not in range(2,5):
-                print("Invalid selection. Try again.")
+            if int(input_str) not in SOLVABLE_CUBE_SIZES:
+                print("Invalid cube size. Try again.")
             else:
                 self.cubesize = int(input_str)
                 self.motor_state_tracker = MotorStateTracker(cubesize=self.cubesize)
@@ -138,6 +140,7 @@ class  RobotController:
                 while True:
                     picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics. type '=' to exit:")
                     if picker == '=':
+                        self.send_command(self.motor_state_tracker.home_command())
                         break
                     mode_function = self.modes.get(picker)
                     if mode_function:
