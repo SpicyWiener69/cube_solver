@@ -235,7 +235,7 @@ Task_T string_to_task(char motorID, int32_t deg)
 	//task.relative_deg = deg;
 	task.id = motorID;
 	task.direction = (deg > 0) ? 1 : -1;
-	task.steps = abs(deg) / ((float)360) * task.stepsPer360;
+	task.steps = (int)(abs(deg) / ((float)360) * task.stepsPer360);
 	task.parse_success = 1;
 	return task;
 }

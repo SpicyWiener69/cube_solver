@@ -25,6 +25,7 @@ class  RobotController:
     def send_command(self, command:str):
         command += '#'  # Append command end character
         print(f'sending command of length {len(command)} char...')
+        print(command)
         self.port.write(command.encode('ascii'))
         response = self.port.read_until(expected=b'}')
         print(f"task completed")
