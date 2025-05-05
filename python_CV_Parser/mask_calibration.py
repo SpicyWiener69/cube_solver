@@ -105,5 +105,5 @@ def resize_frame(frame,scale_percent = 50) -> np.array:
     return frame
 
 if __name__ == '__main__':
-    calibrate_mask(cubesize=3)
+    calibrate_mask(cubesize=4)
     

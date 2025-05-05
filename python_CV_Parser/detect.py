@@ -12,9 +12,7 @@ from mask_calibration import resize_frame
 
 #from rubikscolorresolver.solver import resolve_colors
 from color_resolver import resolve_colors
-
-
-
+from video_stream_threading import VideoStream
 
 def timeit(func):
     @functools.wraps(func)
@@ -29,50 +27,59 @@ def timeit(func):
 
 
 class Detector:
-    def __init__(self, cubesize, debug=False, video_address="https://10.42.0.99:8080/video"):
+    def __init__(self, cubesize, debug=False):
         self.debug = debug
         self.cubelayer = cubesize
         self.rgb_dict = {}
         self.aoi_dict = self._read_json()
         self.detect_count = 0
-        self.video_address = video_address
-        self.cap = cv2.VideoCapture(self.video_address)
-        self.ret, self.frame = self.cap.read()
-        self.stopped = False
-        self.lock = threading.Lock()
+        self.stream = VideoStream()
+        # self.video_address = video_address
+        # self.cap = cv2.VideoCapture(self.video_address)
+        # self.ret, self.frame = self.cap.read()
+        # self.stopped = False
+        # self.lock = threading.Lock()
+
+    # def start(self):
+    #     self.thread = threading.Thread(target=self._update, daemon=True, args=())
+    #     self.thread.start()
+    #     time.sleep(1)
+    #     return self
+
+    # #@timeit
+    # def _update(self):
+    #     while not self.stopped:
+    #         if not self.cap.isOpened():
+    #             self.stopped = True
+                
+    #             return
+    #           # Do the SLOW read OUTSIDE the lock
+    #         ret, new_frame = self.cap.read()
+        
+    #         # Use a short lock only for the assignment
+    #         with self.lock:
+    #             self.ret = ret
+    #             self.frame = new_frame
+    # #@timeit
+    # def _read_frame(self):
+    #     with self.lock:
+    #         return self.ret, self.frame
+
+    # def stop(self):
+    #     self.stopped = True
+    #     if self.cap.isOpened():
+    #         self.cap.release()
+    #     #self.thread.join()
+    # # def calibrate_mask(self):
+    # #     mask_calibration.calibrate_mask(self.cubelayer)
 
     def start(self):
-        self.thread = threading.Thread(target=self._update, daemon=True, args=())
-        self.thread.start()
-        time.sleep(1)
+        self.stream.start()
         return self
 
-    @timeit
-    def _update(self):
-        while not self.stopped:
-            if not self.cap.isOpened():
-                self.stopped = True
-                
-                return
-              # Do the SLOW read OUTSIDE the lock
-            ret, new_frame = self.cap.read()
-        
-            # Use a short lock only for the assignment
-            with self.lock:
-                self.ret = ret
-                self.frame = new_frame
-    @timeit
-    def _read_frame(self):
-        with self.lock:
-            return self.ret, self.frame
-
     def stop(self):
-        self.stopped = True
-        if self.cap.isOpened():
-            self.cap.release()
-        #self.thread.join()
-    # def calibrate_mask(self):
-    #     mask_calibration.calibrate_mask(self.cubelayer)
+        self.stream.stop()
+        print('stopped streaming thread')
 
     def reset_detection(self):
         self.aoi_dict = self._read_json()
@@ -93,13 +100,12 @@ class Detector:
             print(f"Error: The file '{file_path}' was not found")
 
     def _calculate_avg_bbox(self, bbox):
-        _, raw_frame = self._read_frame()
-        frame = resize_frame(raw_frame)
+        # _, raw_frame = self._read_frame()
+        # frame = resize_frame(raw_frame)
+        frame = self.stream.read_resized_frame()
         roi = frame[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0], :] 
         if self.debug:
             ic(roi)
-            
-            #convert from BGRA mean to rgb
         bgra_mean = cv2.mean(roi)
         bgr_mean = list(bgra_mean[0:3])
         rgb_mean = self._bgr2rgb(bgr_mean, rounding=True)
@@ -107,7 +113,8 @@ class Detector:
         # rgb_mean[0], rgb_mean[1], rgb_mean[2] = round(bgr_mean[2]), round(bgr_mean[1]), round(bgr_mean[0])
         return rgb_mean
     
-    def _rgb2bgr(self,rgb: list, rounding=False) -> list:
+    @staticmethod
+    def _rgb2bgr(rgb: list, rounding=False) -> list:
         bgr = [0] * 3
         if rounding:
             bgr[0], bgr[1], bgr[2] = round(rgb[2]), round(rgb[1]), round(rgb[0])
@@ -115,7 +122,8 @@ class Detector:
             bgr[0], bgr[1], bgr[2] = rgb[2], rgb[1], rgb[0]
         return bgr
 
-    def _bgr2rgb(self,bgr: list, rounding=False) -> list:
+    @staticmethod
+    def _bgr2rgb(bgr: list, rounding=False) -> list:
 
         rgb = [0] * 3
         if rounding:
@@ -127,8 +135,9 @@ class Detector:
 
 
     def display_bboxes(self) -> None:
-        _, raw_frame = self._read_frame()
-        frame = resize_frame(raw_frame)
+        # _, raw_frame = self._read_frame()
+        # frame = resize_frame(raw_frame)
+        frame = self.stream.read_resized_frame()
         for _, bbox in self.aoi_dict.items():
             cv2.rectangle(frame, bbox[0], bbox[1], color=(255, 255, 255), thickness=2)
         

@@ -83,8 +83,21 @@ class MotorStateTracker:
         
         return motor_commands
 
+    def clamp_command(self) -> str:
+        '''
+        returns the command that clamps down on the cube along the y axis, depending on cubesize.
+        '''
+
+        actions = [
+            {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
+            {"operation": 'W', "magnitude": 400},
+            {"operation": 'C', "magnitude": self.Dim.C_HOME}
+        ]
+        motor_commands = self.action_to_motor_command(actions)
+        return motor_commands
+
     def dataclass_to_motor_command(self, dataclasses) -> str:
-        abs = self._from_dataclass_to_abs(dataclasses)
+        abs = self._from_move_to_abs(dataclasses)
         relative = self._abs_to_relative(abs)
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
@@ -94,7 +107,7 @@ class MotorStateTracker:
         motor_commands = self._gear_ratio_conversion(relative)
         return motor_commands
 
-    def _from_dataclass_to_abs(self, dataclasses:list[Move]) ->list[dict[str,str]]:
+    def _from_move_to_abs(self, dataclasses:list[Move]) ->list[dict[str,str]]:
         abs_states = []
 
         notation_to_commands = {
@@ -142,21 +155,6 @@ class MotorStateTracker:
                                 {"operation": 'D', "magnitude": self.Dim.D_HOME},
                                 ],
 
-            # 'u': lambda dir, rep: [
-            #                     {"operation": 'C', "magnitude": self.Dim.C_HOME},
-            #                     {"operation": 'D', "magnitude": self.Dim.D_LAYER_MID},
-            #                     {"operation": 'W', "magnitude": 400},
-            #                     {"operation": 'C', "magnitude": self.Dim.C_CLAMP},
-            #                     {"operation": 'G', "magnitude": self.Dim.G_GRIP},
-            #                     {"operation": 'W', "magnitude": 500},
-            #                     {"operation": 'T', "magnitude": (90* dir * rep)},
-            #                     {"operation": 'W', "magnitude": 500},
-            #                     {"operation": 'G', "magnitude": self.Dim.G_HOME},
-            #                     {"operation": 'C', "magnitude": self.Dim.C_HOME},
-            #                     {"operation": 'D', "magnitude": self.Dim.D_LOWER},
-            #                     {"operation": 'T', "magnitude": (90 * dir * rep * -1)}, 
-            #                     {"operation": 'D', "magnitude": self.Dim.D_HOME},
-            #                     ],
         }
         for notation in dataclasses:
             magnitude = notation_to_commands.get(notation.name)(notation.direction, notation.repetition, notation.depth)
@@ -184,23 +182,13 @@ class MotorStateTracker:
     def _gear_ratio_conversion(self, relative_commands: list) -> str:
         motor_commands = []
         
-        # ratios = { 
-        #     'W':1,
-        #     'L':1,
-        #     'T':9.875,
-        #     'C':(360/(40)) / 2,  # division of 2 for double the magnitude of C motor pulley
-        #     'D':360/(63),
-        #     'G': lamba 
-        #     #(-360/46.3) / 2,  #division of 2 ,negative for servo motor direction adjustment //46.3 prev
-        # }
-        #converted unit: deg
         ratios = { 
             'W': lambda value: value * 1,
             'L': lambda value: value * 1,
             'T': lambda value: value * 9.875,
             'C': lambda value: value * ((360 / 40) / 2),  # double pulley magnitude
             'D': lambda value: value * (360 / 63),
-            'G': lambda value: value * -3.75 + 311.25  # linear transformation for servo
+            'G': lambda value: value * -3.75 + 311.25  # linear transformation for servo motor
         }
         for relative_command in relative_commands:
             motor = relative_command["operation"]

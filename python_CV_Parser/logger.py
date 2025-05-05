@@ -24,11 +24,6 @@ class Logger:
         for key, value in kwargs.items():
             if key in self.new_log:
                 self.new_log[key] = value
-        # self.newlog["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # self.newlog["success"] = success
-        # self.newlog["detection_time"] = detection_time
-        # self.newlog["solve_time"] = solve_time
-        # self.newlog["cubesize"] = cubesize
 
     def save(self) -> None:
         if not self.new_log:
