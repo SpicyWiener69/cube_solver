@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from icecream import ic
 
-from mask_calibration import resize_frame
+from video_stream_threading import VideoStream
 from constants import VIDEO_ADDRESS
 
 class compareError(Exception):
@@ -158,7 +158,8 @@ def refresh_trackbars(hsv_dict, color_code, windowname) -> None:
 def hsv_color_calibration() -> None:
     windowname = 'tuner'
     cv2.namedWindow(windowname)
-    camera = cv2.VideoCapture(VIDEO_ADDRESS)
+    stream = VideoStream().start()
+    #camera = cv2.VideoCapture(VIDEO_ADDRESS)
     color_picker = '0: U \n1: R\n2: F\n '
    
     color_index_code = {
@@ -191,8 +192,9 @@ def hsv_color_calibration() -> None:
             refresh_trackbars(hsv_dict, color_code, windowname)
             prev_color_index = current_color_index
 
-        _, rawframe = camera.read()
-        frame = resize_frame(rawframe, scale_percent=30)
+        # _, rawframe = camera.read()
+        # frame = resize_frame(rawframe, scale_percent=30)
+        frame = stream.read_resized_frame(scale_percent=30)
         hsv_frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
         
         l_h = cv2.getTrackbarPos('Lower H', windowname)
@@ -268,9 +270,9 @@ def test_circular_inrange():
     img1 = circular_inrange_matrix(img, [10, 50, 50], [170, 255, 255])
     img2 = circular_inrange_matrix(img, [175, 50, 50], [5, 255, 255])
     img3 = circular_inrange_matrix(img3, [175, 50, 50], [5, 255, 255])
-    img = resize_frame(img,20)
-    img1 = resize_frame(img1,20)
-    img2 = resize_frame(img2,20)
+    # img = resize_frame(img,20)
+    # img1 = resize_frame(img1,20)
+    # img2 = resize_frame(img2,20)
     cv2.imshow('original', img)
     cv2.imshow('img1',img1)
     cv2.imshow('img2',img2)

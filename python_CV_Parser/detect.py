@@ -8,7 +8,6 @@ import numpy as np
 from icecream import ic
 import functools
 
-from mask_calibration import resize_frame
 
 #from rubikscolorresolver.solver import resolve_colors
 from color_resolver import resolve_colors
@@ -144,7 +143,7 @@ class Detector:
         cv2.imshow('frame',frame)
             # if cv2.waitKey(1) == ord(' '):
             #     break
-        cv2.waitKey(1000)
+        cv2.waitKey(700)
         cv2.destroyWindow('frame')
         
     def detect_face(self) -> None:

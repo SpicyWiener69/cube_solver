@@ -6,6 +6,7 @@ from detect import Detector
 from notation_parser import NotationConvertor
 from api_call import fetch_solution 
 from logger import Logger
+from mask_calibration import Calibrator
 
 SOLVABLE_CUBE_SIZES = [2,3,4]
 
@@ -17,8 +18,9 @@ class  RobotController:
         self.modes = {
             's':self.scanner_mode,
             'n': self.notation_mode,
+            'c': self.calibration_mode,
+            'i': self.inverse_kinematics_mode,
             'r': self.raw_mode,
-            'i': self.inverse_kinematics_mode
         }
 
     def _send_command(self, command:str):
@@ -35,7 +37,7 @@ class  RobotController:
     
     def send_command_pieces(self, command:str):
         '''
-        Memory on MCU is limited. sending commands in chunks.
+        Memory on MCU is limited. sending char commands in chunks.
         '''
         commands = command.split(';')
         stepsize = 50
@@ -49,6 +51,7 @@ class  RobotController:
             cube_state = self._scan_six_sides()
             print(cube_state)
             solution = fetch_solution(cube_state=cube_state)
+            print(solution)
             if solution == ['is', 'already', 'solved']:
                 print('already solved')
             else:
@@ -76,9 +79,9 @@ class  RobotController:
         t0 = time.time()
         command = self.motor_state_tracker.cube_alignment_command() # align cube before detection
         self._send_command(command)
-        time.sleep(2)
 
         detector.start()
+        time.sleep(2)
         detector.display_bboxes()
         detector.detect_face()
 
@@ -90,14 +93,13 @@ class  RobotController:
 
             #align cube long the y axis for more accurate detection
             self._send_command(self.motor_state_tracker.clamp_command()) 
-            time.sleep(1.5)
+            time.sleep(1)
             detector.display_bboxes()
             detector.detect_face()
 
         # align back to original orientation
         command = self.motor_state_tracker.dataclass_to_motor_command(self.notation_convertor.to_dataclasses(["x'"]))
         self._send_command(command)
-
 
         # info logging
         t1 = time.time()    
@@ -142,6 +144,15 @@ class  RobotController:
                 command_str = self.motor_state_tracker.action_to_motor_command(actions)
             self._send_command(command_str)
 
+
+    def calibration_mode(self):
+        calibrator = Calibrator(cubesize=self.cubesize).start()
+        command = self.motor_state_tracker.cube_alignment_command() # align cube before calibration
+        self._send_command(command)
+        time.sleep(1)
+        calibrator.calibrate_mask()
+        calibrator.stop()
+
     def raw_mode(self):
         '''
         raw serial communication with the MCU, akin to using PuTTY.
@@ -168,7 +179,7 @@ class  RobotController:
                 self.motor_state_tracker = MotorStateTracker(cubesize=self.cubesize)
                 self.notation_convertor = NotationConvertor(cubesize=self.cubesize)
                 while True:
-                    picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics. type '=' to exit:")
+                    picker = input("Mode selection:(s)Scanner, (n) Notation, (r) Raw motor, (i) Inverse kinematics (c) calibrator.'=' to exit:")
                     if picker == '=':
                         self._send_command(self.motor_state_tracker.home_command())
                         break
